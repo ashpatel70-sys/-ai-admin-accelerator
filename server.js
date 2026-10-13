@@ -83,6 +83,10 @@ async function paid(id){
  return s;
 }
 async function sendMail(to,subject,html,key){
+ if(isQASite){
+  subject='[SANDBOX TEST — NO PAYMENT] '+subject;
+  html='<p style="background:#fff1c0;color:#372a02;padding:12px;font-weight:bold">SANDBOX ONLY — simulated test payment. This is not a real order or commercial receipt.</p>'+html;
+ }
  if(agentMailKey){
   const u=(localAgentMailBase||'https://api.agentmail.to/v0')+'/inboxes/'+encodeURIComponent(agentMailInbox)+'/messages/send';
   const r=await fetch(u,{method:'POST',headers:{authorization:'Bearer '+agentMailKey,'content-type':'application/json'},body:JSON.stringify({to:[to],subject,html,text:html.replace(/<[^>]*>/g,' ').replace(/&amp;/g,'&')})});
