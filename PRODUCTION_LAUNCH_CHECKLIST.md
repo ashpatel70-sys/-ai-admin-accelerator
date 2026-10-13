@@ -56,3 +56,10 @@ The service was created from a public Git URL rather than an authenticated provi
 - `AGENTMAIL_CONNECTIVITY_CHECK_ON_STARTUP` was then reset to `false` to prevent repeat test messages.
 - Merchant payments remain disabled by `LIVE_SALES_ENABLED=false`, `LEGAL_READY=false` and `FULFILMENT_TESTED=false`.
 - Outstanding: real Stripe sandbox setup, signed webhook + genuine sandbox purchase test, final seller legal details, UK consumer terms/privacy review, production reliability and explicit release approval.
+
+## Final legal gate: mandatory pre-sale identity (13 October 2026)
+- `server.js` now requires `PUBLIC_SELLER_LEGAL_NAME` (legal trader/operator name) and `PUBLIC_SELLER_POSTAL_ADDRESS` (real geographic business/trading address) as part of the server-side readiness gate, even when all three deployment flags are true. Do not publish an individual's home address without their explicit consent.
+- Legal name/address are inserted into the terms and privacy pages from those environment settings when configured. Keep the pages as marked `Prelaunch draft` until the owner reviews the finished terms, including tax and refunds.
+- Purchase confirmation emails now include seller identification, price, product, date, contact, recorded immediate-supply consent text and reference to cancellation guidance.
+- Published a cancellation-information and model-form page: `/cancellation.html`. This is an explanatory draft, not legal advice.
+- Checkout remains disabled; do not set `LEGAL_READY` to `true` until seller identity, address, tax and consumer-law review are complete. UK information requirements: GOV.UK Online and distance selling.
