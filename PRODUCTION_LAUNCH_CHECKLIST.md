@@ -16,7 +16,7 @@ The service was created from a public Git URL rather than an authenticated provi
 ## Before accepting a first payment
 1. **Use a private GitHub repository for any sensitive code or commercially licensed content.** Never commit API keys or customer data. The digital ZIP must not be added to this public repository.
 2. **Identify the seller:** enter the correct legal entity/trading name, geographic address, actual support email, registered company and VAT details if applicable. Replace every placeholder in `public/terms.html` and `public/privacy.html` and get suitable UK consumer, privacy and tax review.
-3. **Email:** connect a Resend account, verify the sender domain, and set `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `OWNER_EMAIL` and `PUBLIC_CONTACT_EMAIL` as private Render variables. Do not paste API keys into chat.
+3. **Email:** the AgentMail inbox `aiadminaccelerator@agentmail.to` is active and publicly listed. The website's Resend transactional emails are NOT connected. Verify a sender domain, then set `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `OWNER_EMAIL` and `PUBLIC_CONTACT_EMAIL` as private Render variables. Do not paste API keys into chat.
 4. **Digital delivery:** use private protected storage, or for this small ZIP temporarily configure `TOOLKIT_BASE64` as a private Render environment variable. Do not publish the ZIP in GitHub. Test receiving, unzipping and using the product.
 5. **Stripe:** configure `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` in Render private environment variables; production webhooks should be enabled only after the handler accepts and verifies signed events and sends emails. The existing Stripe live webhook is disabled; review and enable it when ready. Never paste secrets into chat.
 6. **Test environment:** create sandbox-mode Stripe prices and keys; validate the full checkout > webhook > delivery email > purchase verification > download/owner intake lifecycle with test payments, including a failed/delayed payment. The live account's price IDs cannot be used with a test-mode key.
@@ -30,3 +30,8 @@ The service was created from a public Git URL rather than an authenticated provi
 - `/api/order`, `/api/download`, and `/api/intake` re-check payment and product identity with Stripe.
 - Buyer emails link to a verified order page; review intake is sent privately to owner.
 - This code is a **starter implementation**. Complete compliance, reliability and end-to-end integration testing before opening sales.
+
+## Dedicated business inbox (13 October 2026)
+- `aiadminaccelerator@agentmail.to` was created in AgentMail and a self-addressed send/receive test passed.
+- The contact details are included in the website and legal-page drafts.
+- Payment notification and fulfilment emails are not yet configured or end-to-end tested.
