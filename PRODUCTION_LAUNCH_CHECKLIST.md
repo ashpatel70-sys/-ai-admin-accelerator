@@ -8,7 +8,10 @@
 - **Stripe account:** LinkedIn Stripe account; catalogue products created for toolkit £29 and workflow review £149.
 - **Stripe webhook:** `we_1UPy0mDwwUKjI9bP1ty3CNfW`, currently DISABLED while fulfilment is incomplete. Only new-store checkout events should trigger fulfilment; handler checks store metadata.
 - **Hosted checkout:** DISABLED. The storefront is not yet accepting payments.
-- **Tests:** 10 automated tests pass at Render build (staging safety, no public toolkit, unsigned webhook cannot process).
+- **Tests:** 16 automated tests pass at Render build on 13 October 2026, including checks against accidental sales activation, public file access, and unsigned webhook processing.
+
+## Render deployment note
+The service was created from a public Git URL rather than an authenticated provider integration. Render requires a manual deployment after new code commits in this setup, even when the service reports an automatic deployment setting. Recheck that the intended commit SHA is live after each code update. Do not enable sales based solely on GitHub commits.
 
 ## Before accepting a first payment
 1. **Use a private GitHub repository for any sensitive code or commercially licensed content.** Never commit API keys or customer data. The digital ZIP must not be added to this public repository.
