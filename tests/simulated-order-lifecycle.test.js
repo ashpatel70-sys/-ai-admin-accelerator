@@ -44,7 +44,7 @@ const mailServer=createServer(async(req,res)=>{
 const listen=(server,port)=>new Promise((resolve,reject)=>server.listen(port,'127.0.0.1',e=>e?reject(e):resolve()));
 const setup=Promise.all([listen(stripeServer,ports.stripe),listen(mailServer,ports.mail)]).then(()=>{
  app=spawn(process.execPath,['server.js'],{env:{
- ...process.env,NODE_ENV:'test',PORT:String(ports.shop),
+ ...process.env,NODE_ENV:'test',DEPLOYMENT_STAGE:'qa',PORT:String(ports.shop),
  STRIPE_SECRET_KEY:'sk_test_mock_only',
  STRIPE_WEBHOOK_SECRET:'whsec_test_demo',
  STRIPE_PRICE_TOOLKIT:offers.toolkit.price,
