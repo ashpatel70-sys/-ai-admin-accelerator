@@ -1,0 +1,25 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Your order | AI Admin Accelerator</title><style>body{font-family:system-ui,sans-serif;background:#f5f7fe;color:#1b2944;margin:0}.wrap{max-width:740px;margin:70px auto;background:#fff;padding:42px;border-radius:20px;box-shadow:0 10px 40px #1a2d5a13}a{color:#464dd0}input,textarea{display:block;width:100%;box-sizing:border-box;padding:12px;margin:8px 0 18px;border:1px solid #c7d0df;border-radius:9px}textarea{min-height:100px}button,.btn{background:#5257d9;color:#fff;border:0;border-radius:9px;padding:14px 18px;cursor:pointer;font-weight:bold;display:inline-block}p{line-height:1.6;color:#50617a}.error{color:#af2639}@media(max-width:700px){.wrap{margin:20px 12px;padding:25px}}</style></head><body><main class="wrap"><p><a href="/">← AI Admin Accelerator</a></p><h1>Order verification</h1><p>We verify your payment with Stripe before providing a download or service form.</p><section id="content"><p>Checking your order…</p></section></main><script>
+(async()=>{
+ const area=document.getElementById('content'),id=new URLSearchParams(location.search).get('session_id');
+ if(!id){area.textContent='Order reference missing. Please use your private link from Stripe checkout or your order email.';return}
+ try{
+ const r=await fetch('/api/order?session_id='+encodeURIComponent(id),{cache:'no-store'}),o=await r.json();
+ if(!r.ok||!o.paid)throw new Error('Your payment could not be verified yet. If you have just paid, check again using your order email link.');
+ if(o.offer==='toolkit'){
+  area.innerHTML='<h2>Payment verified</h2><p>Your business toolkit is ready. Save the ZIP, extract it and open the included HTML guide in a browser.</p><a class="btn" id="download" href="#">Download your paid toolkit</a><p>Keep this order URL private. It provides access to your purchase.</p>';
+  document.getElementById('download').href='/api/download?session_id='+encodeURIComponent(id);
+ } else {
+  area.innerHTML='<h2>Tell us about your workflow</h2><p>Complete this form to begin the written review. Do not include passwords, confidential client records or sensitive personal information.</p><form id="intake"><label>Business name<input name="business" required maxlength="150"></label><label>Sector<input name="sector" maxlength="150"></label><label>Recurring workflow or process<textarea name="tasks" required minlength="20" maxlength="2500"></textarea></label><label>Software currently used<input name="tools" maxlength="600"></label><label>Desired improvement<textarea name="goal" required minlength="10" maxlength="1200"></textarea></label><button type="submit">Submit workflow brief</button><p id="result" role="status"></p></form>';
+  document.getElementById('intake').addEventListener('submit',async e=>{
+   e.preventDefault();const form=e.currentTarget,button=form.querySelector('button'),status=document.getElementById('result');button.disabled=true;status.textContent='Submitting your brief…';
+   try{
+    const values=Object.fromEntries(new FormData(form).entries());values.session_id=id;
+    const r=await fetch('/api/intake',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(values)}),data=await r.json();
+    if(!r.ok)throw new Error(data.error||'Unable to submit');
+    status.textContent='Your brief has been received. The written review is normally delivered within five UK working days of a complete intake.';form.querySelectorAll('input,textarea').forEach(x=>x.disabled=true);button.hidden=true;
+   }catch(e){status.className='error';status.textContent=e.message;button.disabled=false}
+  });
+ }
+ }catch(e){area.innerHTML='<h2>Payment not verified</h2><p id="reason" class="error"></p><p>If payment succeeded, use the order link from your email receipt or contact the seller.</p>';document.getElementById('reason').textContent=e.message}
+})();
+</script></body></html>
