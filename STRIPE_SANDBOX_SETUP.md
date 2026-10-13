@@ -61,3 +61,16 @@ Do not enable live Stripe checkout until all operational and legal checks are co
 - **Render connector issue**: connected Render operations are currently returning `link_id must identify an eligible linked account` since the Stripe connector reauthorisation. Update the ChatGPT Render app connection before further infrastructure changes, or set the missing variables directly in the Render QA service as a one-off.
 - **Still needed for true end-to-end sandbox testing**: securely configure `STRIPE_SECRET_KEY` with a key from the **QA Stripe sandbox** only, `STRIPE_WEBHOOK_SECRET` from the sandbox event endpoint, and `AGENTMAIL_API_KEY` from the business inbox in the **QA Render service only**. Do not copy live Stripe credentials into QA. `TOOLKIT_BASE64`, `DEPLOYMENT_STAGE=qa`, `OWNER_EMAIL` and `PUBLIC_BASE_URL` are already in the QA service. Then verify a sandbox purchase, webhook and protected download before using the QA test-only enablement gates. Do not enable the production shop.
 - **Version-control automated tests**: GitHub workflow `.github/workflows/tests.yml` was installed and will run `npm test` on main changes.
+
+## Connected Render sandbox webhook configuration — 13 October 2026
+- Restored Render app access by selecting the authorized **Render** linked account explicitly (the prior generic connection failure was a missing account selector, not loss of the workspace).
+- Verified sandbox account `acct_1UPzFCDZ2uwtomrM`, `livemode=false`.
+- Created the **active** QA webhook `we_1UQ0EbDZ2uwtomrMfpcZr4VZ` for `https://ai-admin-accelerator-qa.onrender.com/api/stripe-webhook`, with `checkout.session.completed`, `checkout.session.async_payment_succeeded`, and `checkout.session.async_payment_failed`.
+- Sent the webhook signing secret **directly** to the QA Render environment as `STRIPE_WEBHOOK_SECRET`; it was **never written to this repository or shown to the owner in chat**.
+- Disabled the superseded sandbox webhook `we_1UPzTnDZ2uwtomrMLemtecLS` to avoid duplicate events.
+- Installed both verified sandbox price IDs into the QA Render environment, with `DEPLOYMENT_STAGE=qa` and **all three payment flags still false**.
+- QA deployment `dep-db6u1vbrjlhs73993ceg` completed successfully; **30 tests passed** and app log confirms **checkout DISABLED**.
+- Application log confirms **`AgentMail credential present=false`**, even though toolkit storage is valid. The QA Render service still needs a **separate AgentMail API key** (`AGENTMAIL_API_KEY`) and **sandbox-only restricted Stripe key** (`STRIPE_SECRET_KEY`). The production AgentMail key must not be exposed or moved through GitHub/chat, and a live Stripe key must never be used in QA.
+- The two sandbox Stripe Checkout Sessions already created remain **unpaid**; no genuine end-to-end paid sandbox purchase yet.
+- No changes were made to the production Stripe live account and production customer checkout remains disabled.
+- After the owner privately adds the two remaining keys, verify QA readiness from `/api/health`, run a genuine sandbox card purchase, confirm Stripe webhook and buyer receipt, protected ZIP download, and the £149 review intake. Only sandbox QA payment flags may then be intentionally enabled; leave production flags false.
