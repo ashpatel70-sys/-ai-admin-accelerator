@@ -7,9 +7,14 @@ import {fileURLToPath} from 'node:url';
 const ROOT=path.dirname(fileURLToPath(import.meta.url)),PUBLIC=path.join(ROOT,'public');
 const PORT=Number(process.env.PORT||3000);
 const BASE=(process.env.PUBLIC_BASE_URL||'http://localhost:'+PORT).replace(/\/$/,'');
+const isQASite=process.env.DEPLOYMENT_STAGE==='qa';
+// Sandbox catalogue price IDs are public references, never secret credentials. The production
+// storefront must continue reading prices exclusively from its own private environment.
+const QA_PRICE_TOOLKIT='price_1UPzSbDZ2uwtomrMbnbVLK5x';
+const QA_PRICE_REVIEW='price_1UPzSkDZ2uwtomrMm8kCkPl6';
 const PRODUCTS={
- toolkit:{name:'AI Admin Toolkit',amount:2900,price:process.env.STRIPE_PRICE_TOOLKIT||''},
- audit:{name:'AI Workflow Review',amount:14900,price:process.env.STRIPE_PRICE_REVIEW||''}
+ toolkit:{name:'AI Admin Toolkit',amount:2900,price:process.env.STRIPE_PRICE_TOOLKIT||(isQASite?QA_PRICE_TOOLKIT:'')},
+ audit:{name:'AI Workflow Review',amount:14900,price:process.env.STRIPE_PRICE_REVIEW||(isQASite?QA_PRICE_REVIEW:'')}
 };
 const contact=process.env.PUBLIC_CONTACT_EMAIL||'';
 const owner=process.env.OWNER_EMAIL||'';
@@ -24,7 +29,6 @@ const agentMailInbox=process.env.AGENTMAIL_INBOX||'aiadminaccelerator@agentmail.
 const fromEmail=process.env.RESEND_FROM_EMAIL||'';
 const isLive=/^(sk|rk)_live_/.test(stripeKey);
 const isTest=/^(sk|rk)_test_/.test(stripeKey);
-const isQASite=process.env.DEPLOYMENT_STAGE==='qa';
 // Integration-test endpoints are accepted ONLY on localhost in NODE_ENV=test.
 const localMockPattern=/^http:\/\/127\.0\.0\.1:\d+$/;
 const localStripeBase=process.env.NODE_ENV==='test'&&localMockPattern.test(process.env.TEST_STRIPE_BASE||'')?process.env.TEST_STRIPE_BASE:null;
@@ -126,7 +130,7 @@ const server=createServer(async(req,res)=>{
  const u=new URL(req.url,BASE),p=u.pathname;
  try{
   if(req.method==='GET'&&p==='/api/health')return response(res,200,{ok:true,checkoutEnabled:enabled,mode:isLive?'live':isTest?'test':'unconfigured',siteStage:isQASite?'qa':'production',supportEmailConfigured:Boolean(contact),sellerDetailsReady,emailTransportReady:mailReady,toolkitDeliveryReady:validToolkit,timestamp:sleep()});
-  if(req.method==='GET'&&p==='/api/config')return response(res,200,{checkoutReady:enabled,contactEmail:contact,offers:{toolkit:29,audit:149}});
+  if(req.method==='GET'&&p==='/api/config')return response(res,200,{checkoutReady:enabled,sandbox:isQASite,contactEmail:contact,offers:{toolkit:29,audit:149}});
   if(req.method==='POST'&&p==='/api/checkout'){
    if(!enabled)return response(res,503,{error:'Checkout is not yet open.'});
    if(limit(req))return response(res,429,{error:'Too many requests'});
