@@ -39,3 +39,13 @@ UK distance selling requires a correctly identified trader, an established geogr
 The shop now requires `PUBLIC_SELLER_LEGAL_NAME` and `PUBLIC_SELLER_POSTAL_ADDRESS` as additional readiness checks, but these variables have not been provided or published. Do not use an individual's residential address without clear consent.
 
 Do not enable live Stripe checkout until all operational and legal checks are complete and the owner expressly approves launch.
+
+## QA site provisioned, 13 October 2026
+- Sandbox website: https://ai-admin-accelerator-qa.onrender.com
+- Dashboard: https://dashboard.render.com/web/srv-db6t1n0n74is738ueg00
+- Free Node/Render Frankfurt service using the public GitHub app source, `DEPLOYMENT_STAGE=qa`.
+- API key format protection: QA rejects `sk_live_...` and `rk_live_...` Stripe keys even if every readiness setting is true. A legitimate sandbox restricted key `rk_test_...` or test secret `sk_test_...` can be used after separate environment configuration.
+- Toolkit archive staged privately in QA Render `TOOLKIT_BASE64`; customer email sender credential is **not cloned** into QA automatically.
+- Automated test suite: **30 passed, 0 failed**. The 5 mock payment lifecycle tests now execute in QA mode; live-key rejection has 2 tests.
+- Live production store remains closed to payments. The QA store also remains closed until sandbox credentials and operational testing are deliberately configured.
+- User created a sandbox in Stripe Dashboard, but it has not yet been made available in the connected Stripe app. Authorise it using ChatGPT's Stripe account-management link and then recheck the available accounts list before changing any Stripe resources.
