@@ -166,6 +166,12 @@ async function servePublic(req,res,pathname){
  if(!file.startsWith(PUBLIC+path.sep))return response(res,403,'Forbidden','text/plain');
  const meta=await stat(file).catch(()=>null);if(!meta?.isFile())return response(res,404,'Not found','text/plain');
  let data=await readFile(file);
+ if(['/', '/terms.html','/privacy.html'].includes(pathname)){
+  const traderDetails=sellerDetailsReady&&!isQASite?
+   '<p><strong>Legal seller:</strong> '+escapeHTML(legalSeller)+' (trading as AI Admin Accelerator). <strong>Business address:</strong> '+escapeHTML(legalPostal)+'.</p>':
+   '<p>Trading name: AI Admin Accelerator. Seller identity and business address are not yet finalised for paid ordering.</p>';
+  data=Buffer.from(data.toString('utf8').replace('<!--SELLER_DISCLOSURES-->',traderDetails));
+ }
  if(pathname==='/terms.html'||pathname==='/privacy.html'){
   // Public contract information appears only after it has been deliberately supplied by the owner.
   const withSeller=data.toString('utf8').replaceAll('[SELLER LEGAL NAME]',escapeHTML(legalSeller)||'[SELLER LEGAL NAME]').replaceAll('[SELLER POSTAL ADDRESS]',escapeHTML(legalPostal)||'[SELLER POSTAL ADDRESS]');
