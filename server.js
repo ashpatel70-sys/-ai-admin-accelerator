@@ -13,6 +13,9 @@ const PRODUCTS={
 };
 const contact=process.env.PUBLIC_CONTACT_EMAIL||'';
 const owner=process.env.OWNER_EMAIL||'';
+const legalSeller=process.env.PUBLIC_SELLER_LEGAL_NAME||'';
+const legalPostal=process.env.PUBLIC_SELLER_POSTAL_ADDRESS||'';
+const sellerDetailsReady=Boolean(legalSeller.trim().length>=3&&legalPostal.trim().length>=12&&!/\[(seller|address|todo)\]/i.test(legalSeller+' '+legalPostal));
 const stripeKey=process.env.STRIPE_SECRET_KEY||'';
 const webhookSecret=process.env.STRIPE_WEBHOOK_SECRET||'';
 const resendKey=process.env.RESEND_API_KEY||'';
@@ -28,7 +31,7 @@ const toolkitBase64=process.env.TOOLKIT_BASE64||'';
 const toolkitBuffer=toolkitBase64&&toolkitBase64.length<250000?Buffer.from(toolkitBase64,'base64'):null;
 const validToolkit=Boolean(toolkitBuffer&&toolkitBuffer.length>100&&toolkitBuffer.subarray(0,2).toString()==='PK');
 const mailReady=Boolean((agentMailKey&&agentMailInbox==='aiadminaccelerator@agentmail.to')||(resendKey&&fromEmail));
-const configured=Boolean(stripeKey&&webhookSecret&&mailReady&&owner&&contact&&validToolkit&&Object.values(PRODUCTS).every(p=>/^price_[A-Za-z0-9]+$/.test(p.price)));
+const configured=Boolean(stripeKey&&webhookSecret&&mailReady&&owner&&contact&&validToolkit&&sellerDetailsReady&&Object.values(PRODUCTS).every(p=>/^price_[A-Za-z0-9]+$/.test(p.price)));
 const enabled=configured&&process.env.LIVE_SALES_ENABLED==='true'&&process.env.LEGAL_READY==='true'&&process.env.FULFILMENT_TESTED==='true';
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.ico':'image/x-icon','.svg':'image/svg+xml','.txt':'text/plain; charset=utf-8'};
 const hits=new Map();
@@ -89,10 +92,12 @@ async function fulfil(id){
  if(!to)throw new Error('No customer email');
  const url=BASE+'/success.html?session_id='+encodeURIComponent(order.id);
  const link='<a href="'+escapeHTML(url)+'">Open your secure order page</a>';
+ const orderPrice=order.metadata.offer==='toolkit'?'£29.00':'£149.00';
+ const receipt='<p>Product: '+escapeHTML(PRODUCTS[order.metadata.offer].name)+'; total charged: '+orderPrice+' GBP; order date: '+escapeHTML(new Date(order.created*1000||Date.now()).toISOString().slice(0,10))+'.</p><p>Seller: '+escapeHTML(legalSeller)+', '+escapeHTML(legalPostal)+'. Support: '+escapeHTML(contact)+'.</p><p>Your checkout acknowledgement of early performance and applicable cancellation rights was recorded. For the digital download, you expressly agreed to immediate supply and acknowledged the applicable loss of the 14-day cancellation right once supply begins. Your statutory rights for faulty or misdescribed digital content are unaffected.</p><p>For cancellation and complaints: email '+escapeHTML(contact)+'. You can save these terms and cancellation guidance: '+escapeHTML(BASE)+'/terms.html and '+escapeHTML(BASE)+'/cancellation.html.</p>';
  if(order.metadata.offer==='toolkit'){
-  await sendMail(to,'Your AI Admin Toolkit', '<p>Thank you for ordering.</p><p>'+link+' to download the toolkit.</p><p>Please keep your personal order link private.</p>', 'toolkit-'+id);
+  await sendMail(to,'Your AI Admin Toolkit', '<p>Thank you for ordering.</p>'+receipt+'<p>'+link+' to download the toolkit.</p><p>Please keep your personal order link private.</p>', 'toolkit-'+id);
  }else{
-  await sendMail(to,'Your AI Workflow Review — provide your brief','<p>Thank you for ordering.</p><p>'+link+' and complete the workflow intake.</p><p>Delivery is within five UK working days of complete intake.</p>','audit-buyer-'+id);
+  await sendMail(to,'Your AI Workflow Review — provide your brief','<p>Thank you for ordering.</p>'+receipt+'<p>'+link+' and complete the workflow intake.</p><p>Delivery is within five UK working days of complete intake.</p>','audit-buyer-'+id);
   await sendMail(owner,'New paid AI workflow review order','<p>New £149 workflow review order: '+escapeHTML(id)+'.</p>','audit-owner-'+id);
  }
  await stripe('POST','/checkout/sessions/'+encodeURIComponent(id),{'metadata[fulfilment_email_sent]':'yes'});
@@ -102,6 +107,11 @@ async function servePublic(req,res,pathname){
  if(!file.startsWith(PUBLIC+path.sep))return response(res,403,'Forbidden','text/plain');
  const meta=await stat(file).catch(()=>null);if(!meta?.isFile())return response(res,404,'Not found','text/plain');
  let data=await readFile(file);
+ if(pathname==='/terms.html'||pathname==='/privacy.html'){
+  // Public contract information appears only after it has been deliberately supplied by the owner.
+  const withSeller=data.toString('utf8').replaceAll('[SELLER LEGAL NAME]',escapeHTML(legalSeller)||'[SELLER LEGAL NAME]').replaceAll('[SELLER POSTAL ADDRESS]',escapeHTML(legalPostal)||'[SELLER POSTAL ADDRESS]');
+  data=Buffer.from(withSeller);
+ }
  if(pathname==='/'){
   // Buttons are disabled in committed HTML; only our runtime JS may enable them after readiness checks.
   const markup=data.toString('utf8').replace('</body>','<script defer src="/checkout.js"></script></body>');
@@ -113,7 +123,7 @@ async function servePublic(req,res,pathname){
 const server=createServer(async(req,res)=>{
  const u=new URL(req.url,BASE),p=u.pathname;
  try{
-  if(req.method==='GET'&&p==='/api/health')return response(res,200,{ok:true,checkoutEnabled:enabled,mode:isLive?'live':stripeKey?'test':'unconfigured',supportEmailConfigured:Boolean(contact),emailTransportReady:mailReady,toolkitDeliveryReady:validToolkit,timestamp:sleep()});
+  if(req.method==='GET'&&p==='/api/health')return response(res,200,{ok:true,checkoutEnabled:enabled,mode:isLive?'live':stripeKey?'test':'unconfigured',supportEmailConfigured:Boolean(contact),sellerDetailsReady,emailTransportReady:mailReady,toolkitDeliveryReady:validToolkit,timestamp:sleep()});
   if(req.method==='GET'&&p==='/api/config')return response(res,200,{checkoutReady:enabled,contactEmail:contact,offers:{toolkit:29,audit:149}});
   if(req.method==='POST'&&p==='/api/checkout'){
    if(!enabled)return response(res,503,{error:'Checkout is not yet open.'});
