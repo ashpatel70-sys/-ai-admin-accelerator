@@ -163,4 +163,16 @@ const server=createServer(async(req,res)=>{
   return await servePublic(req,res,p);
  }catch(e){console.error('Request processing failed:',e.message);return response(res,500,{error:'The request could not be completed'});}
 });
-server.listen(PORT,()=>console.log('AI Admin Accelerator commerce server listening on '+PORT+'; checkout '+(enabled?'ENABLED':'DISABLED')));
+server.listen(PORT,()=>{
+ console.log('AI Admin Accelerator commerce server listening on '+PORT+'; checkout '+(enabled?'ENABLED':'DISABLED'));
+ console.log('Launch diagnostics: AgentMail credential present='+Boolean(agentMailKey)+'; email transport configured='+mailReady+'; valid paid toolkit present='+validToolkit);
+ // Strictly a self-addressed email. Only the actual Render runtime port runs the temporary test.
+ // No API keys or email bodies are logged.
+ if(process.env.AGENTMAIL_CONNECTIVITY_CHECK_ON_STARTUP==='true'&&agentMailKey&&PORT===10000){
+  sendMail(agentMailInbox,'AI Admin Accelerator — hosted email verification','<p>Internal AgentMail connection test from the Render-hosted AI Admin Accelerator shop. This is not a customer order.</p>','startup-test')
+   .then(()=>console.log('AgentMail hosted send verification: SUCCESS'))
+   .catch(e=>console.error('AgentMail hosted send verification: FAILED ('+safe(e.message,130)+')'));
+ }else if(process.env.AGENTMAIL_CONNECTIVITY_CHECK_ON_STARTUP==='true'&&!agentMailKey&&PORT===10000){
+  console.log('AgentMail hosted send verification: SKIPPED (credential not configured)');
+ }
+});
