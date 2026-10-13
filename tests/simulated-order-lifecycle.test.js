@@ -93,7 +93,8 @@ test('valid paid toolkit webhook emails buyer and validates order against line i
  assert.equal(r.status,200);assert.equal(sent.length,1);
  assert.deepEqual(sent[0].to,['buyer@example.test']);
  assert.match(sent[0].subject,/Toolkit/);
- assert.match(sent[0].html,/Example Test Trader Ltd/);
+ assert.match(sent[0].html,/QA SANDBOX/);
+ assert.match(sent[0].subject,/SANDBOX TEST/);
  assert.match(sent[0].html,/£29\.00/);
  assert.match(sent[0].html,/cancellation\.html/);
  assert.equal(sessions.get(offers.toolkit.id).metadata.fulfilment_email_sent,'yes');
