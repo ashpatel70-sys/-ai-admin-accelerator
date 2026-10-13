@@ -23,7 +23,7 @@
      document.body.prepend(banner);
      notice.textContent=cfg.checkoutReady?'SANDBOX CHECKOUT: Stripe test cards only; no real payments.':'QA SANDBOX: test checkout remains closed until the integration and delivery are verified.';
    }
-   if(!cfg.checkoutReady)return;
+   if(!cfg.checkoutReady){if(!cfg.sandbox)notice.textContent='We are open for enquiries today. Email us using either offer button above; secure checkout will follow.';return;}
    notice.textContent=cfg.sandbox?'Stripe sandbox test checkout is available. No real charges will occur.': 'Secure Stripe checkout is available. Prices are in GBP.';
    btns.forEach((btn,i)=>{
     btn.disabled=false;btn.removeAttribute('aria-disabled');btn.style.cssText='background:#5056da;color:white;cursor:pointer';
