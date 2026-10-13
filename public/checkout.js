@@ -15,8 +15,16 @@
   overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!overlay.hidden)close()});
   fetch('/api/config',{cache:'no-store'}).then(r=>r.json()).then(cfg=>{
+   if(cfg.sandbox){
+     const banner=document.createElement('div');
+     banner.setAttribute('role','status');
+     banner.style.cssText='position:relative;z-index:8;background:#ffedbe;color:#452e00;padding:14px 20px;text-align:center;font-weight:850;border-bottom:3px solid #dc9a17;font-size:15px';
+     banner.textContent='STRIPE SANDBOX / QA TESTING ONLY — no real charges. This is not the live customer shop.';
+     document.body.prepend(banner);
+     notice.textContent=cfg.checkoutReady?'SANDBOX CHECKOUT: Stripe test cards only; no real payments.':'QA SANDBOX: test checkout remains closed until the integration and delivery are verified.';
+   }
    if(!cfg.checkoutReady)return;
-   notice.textContent='Secure Stripe checkout is available. Prices are in GBP.';
+   notice.textContent=cfg.sandbox?'Stripe sandbox test checkout is available. No real charges will occur.': 'Secure Stripe checkout is available. Prices are in GBP.';
    btns.forEach((btn,i)=>{
     btn.disabled=false;btn.removeAttribute('aria-disabled');btn.style.cssText='background:#5056da;color:white;cursor:pointer';
     btn.textContent=i===0?'Buy toolkit — £29':'Book workflow review — £149';
