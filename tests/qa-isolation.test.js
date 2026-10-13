@@ -38,6 +38,7 @@ test('QA refuses restricted live Stripe key even when all payment flags are true
  const cfg=await (await api('/api/config')).json();
  assert.equal(cfg.sandbox,true);
  assert.equal(cfg.checkoutReady,false);
+ const page=await api('/'); assert.match(page.headers.get('x-robots-tag'),/noindex/);
 });
 test('QA endpoint denies checkout even with a live restricted key and full configuration',async()=>{
  const r=await api('/api/checkout',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({offer:'toolkit',consent:true})});
