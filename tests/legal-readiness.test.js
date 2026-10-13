@@ -26,9 +26,9 @@ test('checkout refuses charges without verified legal identity and address',asyn
  const r=await get('/api/checkout',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({offer:'toolkit',consent:true})});
  assert.equal(r.status,503);
 });
-test('business cancellation form is accessible, and legal placeholders are shown until approved',async()=>{
+test('business cancellation form is accessible, and trader identity is marked unfinished until approved',async()=>{
  const a=await get('/cancellation.html'),b=await get('/terms.html'),c=await get('/privacy.html');
  assert.equal(a.status,200);assert.match(await a.text(),/Model cancellation form/);
- assert.match(await b.text(),/\[SELLER LEGAL NAME\]/);
- assert.match(await c.text(),/\[SELLER POSTAL ADDRESS\]/);
+ assert.match(await b.text(),/chosen trading name/);
+ assert.match(await c.text(),/legally responsible/);
 });
