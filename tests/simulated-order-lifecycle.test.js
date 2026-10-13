@@ -55,6 +55,8 @@ const setup=Promise.all([listen(stripeServer,ports.stripe),listen(mailServer,por
  TEST_AGENTMAIL_BASE:'http://127.0.0.1:'+ports.mail,
  OWNER_EMAIL:'aiadminaccelerator@agentmail.to',
  PUBLIC_CONTACT_EMAIL:'aiadminaccelerator@agentmail.to',
+ PUBLIC_SELLER_LEGAL_NAME:'Example Test Trader Ltd',
+ PUBLIC_SELLER_POSTAL_ADDRESS:'11 Example Testing Road, London W1A 1AA',
  RESEND_API_KEY:'',RESEND_FROM_EMAIL:'',
  TOOLKIT_BASE64:Buffer.concat([Buffer.from('PK'),Buffer.alloc(500,65)]).toString('base64'),
  LIVE_SALES_ENABLED:'true',LEGAL_READY:'true',FULFILMENT_TESTED:'true'
@@ -91,6 +93,9 @@ test('valid paid toolkit webhook emails buyer and validates order against line i
  assert.equal(r.status,200);assert.equal(sent.length,1);
  assert.deepEqual(sent[0].to,['buyer@example.test']);
  assert.match(sent[0].subject,/Toolkit/);
+ assert.match(sent[0].html,/Example Test Trader Ltd/);
+ assert.match(sent[0].html,/£29\.00/);
+ assert.match(sent[0].html,/cancellation\.html/);
  assert.equal(sessions.get(offers.toolkit.id).metadata.fulfilment_email_sent,'yes');
 });
 test('simulated paid toolkit can download and unpaid/unknown session cannot',async()=>{
