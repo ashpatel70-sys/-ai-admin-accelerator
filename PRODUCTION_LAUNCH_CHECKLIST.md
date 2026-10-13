@@ -8,7 +8,7 @@
 - **Stripe account:** LinkedIn Stripe account; catalogue products created for toolkit £29 and workflow review £149.
 - **Stripe webhook:** `we_1UPy0mDwwUKjI9bP1ty3CNfW`, currently DISABLED while fulfilment is incomplete. Only new-store checkout events should trigger fulfilment; handler checks store metadata.
 - **Hosted checkout:** DISABLED. The storefront is not yet accepting payments.
-- **Tests:** 16 automated tests pass at Render build on 13 October 2026, including checks against accidental sales activation, public file access, and unsigned webhook processing.
+- **Tests:** 25 automated tests pass at Render build on 13 October 2026, including simulated Stripe + AgentMail purchase, signed webhook, fulfilment and intake tests. No real Stripe sandbox purchase yet.
 
 ## Render deployment note
 The service was created from a public Git URL rather than an authenticated provider integration. Render requires a manual deployment after new code commits in this setup, even when the service reports an automatic deployment setting. Recheck that the intended commit SHA is live after each code update. Do not enable sales based solely on GitHub commits.
@@ -35,3 +35,9 @@ The service was created from a public Git URL rather than an authenticated provi
 - `aiadminaccelerator@agentmail.to` was created in AgentMail and a self-addressed send/receive test passed.
 - The contact details are included in the website and legal-page drafts.
 - Payment notification and fulfilment emails are not yet configured or end-to-end tested.
+
+## 13 October 2026 integration update
+- Verified full local mock-payment/email lifecycle with 25 passing tests; **not a real Stripe sandbox test**.
+- Added optional AgentMail automatic receipt sending to server.js; needs an inbox-scoped private API key in Render.
+- Validated the 13-file/45-prompt original customer toolkit and prepared its base64-encoded environment value for secure transfer to Render without making it public in GitHub.
+- Real payments intentionally remain disabled until secure credentials, seller identity/policies and real sandbox fulfilment tests are completed.
