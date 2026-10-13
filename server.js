@@ -20,7 +20,7 @@ const contact=process.env.PUBLIC_CONTACT_EMAIL||'';
 const owner=process.env.OWNER_EMAIL||'';
 const legalSeller=process.env.PUBLIC_SELLER_LEGAL_NAME||'';
 const legalPostal=process.env.PUBLIC_SELLER_POSTAL_ADDRESS||'';
-const sellerDetailsReady=Boolean(legalSeller.trim().length>=3&&legalPostal.trim().length>=12&&!/\[(seller|address|todo)\]/i.test(legalSeller+' '+legalPostal));
+const sellerDetailsReady=Boolean(isQASite||(legalSeller.trim().length>=3&&legalPostal.trim().length>=12&&!/\[(seller|address|todo)\]/i.test(legalSeller+' '+legalPostal)));
 const stripeKey=process.env.STRIPE_SECRET_KEY||'';
 const webhookSecret=process.env.STRIPE_WEBHOOK_SECRET||'';
 const resendKey=process.env.RESEND_API_KEY||'';
@@ -103,7 +103,7 @@ async function fulfil(id){
  const url=BASE+'/success.html?session_id='+encodeURIComponent(order.id);
  const link='<a href="'+escapeHTML(url)+'">Open your secure order page</a>';
  const orderPrice=order.metadata.offer==='toolkit'?'£29.00':'£149.00';
- const receipt='<p>Product: '+escapeHTML(PRODUCTS[order.metadata.offer].name)+'; total charged: '+orderPrice+' GBP; order date: '+escapeHTML(new Date(order.created*1000||Date.now()).toISOString().slice(0,10))+'.</p><p>Seller: '+escapeHTML(legalSeller)+', '+escapeHTML(legalPostal)+'. Support: '+escapeHTML(contact)+'.</p><p>Your checkout acknowledgement of early performance and applicable cancellation rights was recorded. For the digital download, you expressly agreed to immediate supply and acknowledged the applicable loss of the 14-day cancellation right once supply begins. Your statutory rights for faulty or misdescribed digital content are unaffected.</p><p>For cancellation and complaints: email '+escapeHTML(contact)+'. You can save these terms and cancellation guidance: '+escapeHTML(BASE)+'/terms.html and '+escapeHTML(BASE)+'/cancellation.html.</p>';
+ const receipt='<p>Product: '+escapeHTML(PRODUCTS[order.metadata.offer].name)+'; '+(isQASite?'simulated test total':'total charged')+': '+orderPrice+' GBP; order date: '+escapeHTML(new Date(order.created*1000||Date.now()).toISOString().slice(0,10))+'.</p><p>'+(isQASite?'QA SANDBOX — no legal seller or geographic address applies to this simulated transaction.':'Seller: '+escapeHTML(legalSeller)+', '+escapeHTML(legalPostal)+'.')+' Support: '+escapeHTML(contact)+'.</p><p>Your checkout acknowledgement of early performance and applicable cancellation rights was recorded. For the digital download, you expressly agreed to immediate supply and acknowledged the applicable loss of the 14-day cancellation right once supply begins. Your statutory rights for faulty or misdescribed digital content are unaffected.</p><p>For cancellation and complaints: email '+escapeHTML(contact)+'. You can save these terms and cancellation guidance: '+escapeHTML(BASE)+'/terms.html and '+escapeHTML(BASE)+'/cancellation.html.</p>';
  if(order.metadata.offer==='toolkit'){
   await sendMail(to,'Your AI Admin Toolkit', '<p>Thank you for ordering.</p>'+receipt+'<p>'+link+' to download the toolkit.</p><p>Please keep your personal order link private.</p>', 'toolkit-'+id);
  }else{
