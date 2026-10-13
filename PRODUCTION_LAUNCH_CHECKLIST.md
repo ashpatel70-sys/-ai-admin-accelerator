@@ -48,3 +48,11 @@ The service was created from a public Git URL rather than an authenticated provi
 - Build log: 25 tests passed and 0 failed; startup reports `checkout DISABLED`.
 - Remaining email secret: `AGENTMAIL_API_KEY` has not been created by the connected AgentMail ChatGPT connector; its available operations provide email/inbox access but not account API-key issuance. The account owner must create an appropriately restricted key in the AgentMail Console and save it straight into Render (never GitHub).
 - The Stripe live webhook is disabled and real-money checkout must remain off pending a genuine Stripe sandbox integration test, fulfilment verification, and seller/legal completion.
+
+## AgentMail hosted connection verified (13 October 2026)
+- Owner configured `AGENTMAIL_API_KEY` securely in Render.
+- Render launch diagnostics confirmed `AgentMail credential present=true`, `email transport configured=true` and `valid paid toolkit present=true`.
+- The Render-hosted shop successfully sent a non-customer test message from `aiadminaccelerator@agentmail.to` to itself using the real AgentMail API; the same message was verified as received in the AgentMail inbox.
+- `AGENTMAIL_CONNECTIVITY_CHECK_ON_STARTUP` was then reset to `false` to prevent repeat test messages.
+- Merchant payments remain disabled by `LIVE_SALES_ENABLED=false`, `LEGAL_READY=false` and `FULFILMENT_TESTED=false`.
+- Outstanding: real Stripe sandbox setup, signed webhook + genuine sandbox purchase test, final seller legal details, UK consumer terms/privacy review, production reliability and explicit release approval.
