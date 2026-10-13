@@ -51,3 +51,10 @@ The published code will keep checkout off unless **all** these operational input
 - Buyer email receipts, ZIP delivery, and full checkout are therefore not yet end-to-end tested.
 
 For operational help, contact `aiadminaccelerator@agentmail.to`. No personal email account is published.
+
+## Private toolkit deployment — 13 October 2026
+- The full customer toolkit was installed in the Render shop service using the private `TOOLKIT_BASE64` environment variable; this value is NOT in GitHub.
+- Render deployment `dep-db6seh0m7kps73b6p6d0` reached status `live` after the environment change.
+- Build log: 25 tests passed and 0 failed; startup reports `checkout DISABLED`.
+- Remaining email secret: `AGENTMAIL_API_KEY` has not been created by the connected AgentMail ChatGPT connector; its available operations provide email/inbox access but not account API-key issuance. The account owner must create an appropriately restricted key in the AgentMail Console and save it straight into Render (never GitHub).
+- The Stripe live webhook is disabled and real-money checkout must remain off pending a genuine Stripe sandbox integration test, fulfilment verification, and seller/legal completion.
