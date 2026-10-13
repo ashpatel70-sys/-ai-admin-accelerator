@@ -20,6 +20,6 @@
    }catch(e){status.className='error';status.textContent=e.message;button.disabled=false}
   });
  }
- }catch(e){area.innerHTML='<h2>Payment not verified</h2><p id="reason" class="error"></p><p>If payment succeeded, use the order link from your email receipt or contact the seller.</p>';document.getElementById('reason').textContent=e.message}
+ }catch(e){area.innerHTML='<h2>Payment not verified</h2><p id="reason" class="error"></p><p>If payment succeeded, use the order link from your email receipt or contact <a href="mailto:aiadminaccelerator@agentmail.to">business support</a>.</p>';document.getElementById('reason').textContent=e.message}
 })();
 </script></body></html>
