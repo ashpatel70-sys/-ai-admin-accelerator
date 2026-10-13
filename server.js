@@ -16,9 +16,15 @@ const owner=process.env.OWNER_EMAIL||'';
 const stripeKey=process.env.STRIPE_SECRET_KEY||'';
 const webhookSecret=process.env.STRIPE_WEBHOOK_SECRET||'';
 const resendKey=process.env.RESEND_API_KEY||'';
+const agentMailKey=process.env.AGENTMAIL_API_KEY||'';
+const agentMailInbox=process.env.AGENTMAIL_INBOX||'aiadminaccelerator@agentmail.to';
 const fromEmail=process.env.RESEND_FROM_EMAIL||'';
 const isLive=stripeKey.startsWith('sk_live_');
-const configured=Boolean(stripeKey&&webhookSecret&&resendKey&&fromEmail&&owner&&contact&&process.env.TOOLKIT_BASE64&&Object.values(PRODUCTS).every(p=>/^price_[A-Za-z0-9]+$/.test(p.price)));
+const toolkitBase64=process.env.TOOLKIT_BASE64||'';
+const toolkitBuffer=toolkitBase64&&toolkitBase64.length<250000?Buffer.from(toolkitBase64,'base64'):null;
+const validToolkit=Boolean(toolkitBuffer&&toolkitBuffer.length>100&&toolkitBuffer.subarray(0,2).toString()==='PK');
+const mailReady=Boolean((agentMailKey&&agentMailInbox==='aiadminaccelerator@agentmail.to')||(resendKey&&fromEmail));
+const configured=Boolean(stripeKey&&webhookSecret&&mailReady&&owner&&contact&&validToolkit&&Object.values(PRODUCTS).every(p=>/^price_[A-Za-z0-9]+$/.test(p.price)));
 const enabled=configured&&process.env.LIVE_SALES_ENABLED==='true'&&process.env.LEGAL_READY==='true'&&process.env.FULFILMENT_TESTED==='true';
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.ico':'image/x-icon','.svg':'image/svg+xml','.txt':'text/plain; charset=utf-8'};
 const hits=new Map();
@@ -64,6 +70,12 @@ async function paid(id){
  return s;
 }
 async function sendMail(to,subject,html,key){
+ if(agentMailKey){
+  const u='https://api.agentmail.to/v0/inboxes/'+encodeURIComponent(agentMailInbox)+'/messages/send';
+  const r=await fetch(u,{method:'POST',headers:{authorization:'Bearer '+agentMailKey,'content-type':'application/json'},body:JSON.stringify({to:[to],subject,html,text:html.replace(/<[^>]*>/g,' ').replace(/&amp;/g,'&')})});
+  if(!r.ok)throw new Error('AgentMail transactional email failed '+r.status);
+  return;
+ }
  const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{authorization:'Bearer '+resendKey,'content-type':'application/json','idempotency-key':key},body:JSON.stringify({from:fromEmail,to:[to],subject,html})});
  if(!r.ok)throw new Error('Transactional email failed '+r.status);
 }
@@ -97,7 +109,7 @@ async function servePublic(req,res,pathname){
 const server=createServer(async(req,res)=>{
  const u=new URL(req.url,BASE),p=u.pathname;
  try{
-  if(req.method==='GET'&&p==='/api/health')return response(res,200,{ok:true,checkoutEnabled:enabled,mode:isLive?'live':stripeKey?'test':'unconfigured',timestamp:sleep()});
+  if(req.method==='GET'&&p==='/api/health')return response(res,200,{ok:true,checkoutEnabled:enabled,mode:isLive?'live':stripeKey?'test':'unconfigured',supportEmailConfigured:Boolean(contact),emailTransportReady:mailReady,toolkitDeliveryReady:validToolkit,timestamp:sleep()});
   if(req.method==='GET'&&p==='/api/config')return response(res,200,{checkoutReady:enabled,contactEmail:contact,offers:{toolkit:29,audit:149}});
   if(req.method==='POST'&&p==='/api/checkout'){
    if(!enabled)return response(res,503,{error:'Checkout is not yet open.'});
@@ -122,11 +134,11 @@ const server=createServer(async(req,res)=>{
    return s?response(res,200,{paid:true,offer:s.metadata.offer}):response(res,404,{error:'Payment not verified'});
   }
   if(req.method==='GET'&&p==='/api/download'){
-   if(!enabled||!process.env.TOOLKIT_BASE64)return response(res,503,'Downloads are not yet available','text/plain');
+   if(!enabled||!validToolkit)return response(res,503,'Downloads are not yet available','text/plain');
    if(limit(req))return response(res,429,'Too many requests','text/plain');
    let s=null;try{s=await paid(u.searchParams.get('session_id'))}catch{}
    if(s?.metadata.offer!=='toolkit')return response(res,403,'Verified purchase required','text/plain');
-   const zip=Buffer.from(process.env.TOOLKIT_BASE64,'base64');
+   const zip=toolkitBuffer;
    if(zip.length<100||zip.subarray(0,2).toString()!=='PK')return response(res,503,'Digital delivery temporarily unavailable','text/plain');
    return response(res,200,zip,'application/zip',{'content-disposition':'attachment; filename="AI_Admin_Accelerator_Toolkit.zip"','x-robots-tag':'noindex'});
   }
