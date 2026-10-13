@@ -46,6 +46,8 @@ The published code will keep checkout off unless **all** these operational input
 - AgentMail inbox is live, but the Render web server **does not yet have an API key**.
 - Paid ZIP exists in the owner's generated project files but **has not been added to Render private storage**.
 - The connected Stripe tooling exposes the merchant's live account, not a test sandbox. No real charges were made.
+- **25 automated tests passed** on the staging Render deployment, including 5 locally simulated checkout-to-fulfilment tests. Those simulations DO NOT constitute a live Stripe sandbox test.
+- The owner product ZIP was validated: 13 packaged files, 45 AI prompt records, SHA-256 `225dcaf30b6cc2d884d724768b3782d2209c12a3b85bb86eeaa32d6197b41f4f`. A base64 text representation was prepared privately for secure Render `TOOLKIT_BASE64` entry.
 - Buyer email receipts, ZIP delivery, and full checkout are therefore not yet end-to-end tested.
 
 For operational help, contact `aiadminaccelerator@agentmail.to`. No personal email account is published.
