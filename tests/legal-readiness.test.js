@@ -29,6 +29,6 @@ test('checkout refuses charges without verified legal identity and address',asyn
 test('business cancellation form is accessible, and trader identity is marked unfinished until approved',async()=>{
  const a=await get('/cancellation.html'),b=await get('/terms.html'),c=await get('/privacy.html');
  assert.equal(a.status,200);assert.match(await a.text(),/Model cancellation form/);
- assert.match(await b.text(),/chosen trading name/);
- assert.match(await c.text(),/legally responsible/);
+ assert.match(await b.text(),/trading name|trading as AI Admin Accelerator/);
+ assert.match(await c.text(),/Data controller and privacy contact|trading name/);
 });
