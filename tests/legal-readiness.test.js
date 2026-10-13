@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 const port=36878;
 const child=spawn(process.execPath,['server.js'],{env:{
- ...process.env,PORT:String(port),NODE_ENV:'production',
+ ...process.env,PORT:String(port),NODE_ENV:'production',DEPLOYMENT_STAGE:'production',
  STRIPE_SECRET_KEY:'sk_test_faux',STRIPE_WEBHOOK_SECRET:'whsec_faux',
  STRIPE_PRICE_TOOLKIT:'price_testToolkit',STRIPE_PRICE_REVIEW:'price_testAudit',
  AGENTMAIL_API_KEY:'am_test_mock_key',AGENTMAIL_INBOX:'aiadminaccelerator@agentmail.to',
