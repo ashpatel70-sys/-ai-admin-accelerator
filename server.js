@@ -22,7 +22,9 @@ const resendKey=process.env.RESEND_API_KEY||'';
 const agentMailKey=process.env.AGENTMAIL_API_KEY||'';
 const agentMailInbox=process.env.AGENTMAIL_INBOX||'aiadminaccelerator@agentmail.to';
 const fromEmail=process.env.RESEND_FROM_EMAIL||'';
-const isLive=stripeKey.startsWith('sk_live_');
+const isLive=/^(sk|rk)_live_/.test(stripeKey);
+const isTest=/^(sk|rk)_test_/.test(stripeKey);
+const isQASite=process.env.DEPLOYMENT_STAGE==='qa';
 // Integration-test endpoints are accepted ONLY on localhost in NODE_ENV=test.
 const localMockPattern=/^http:\/\/127\.0\.0\.1:\d+$/;
 const localStripeBase=process.env.NODE_ENV==='test'&&localMockPattern.test(process.env.TEST_STRIPE_BASE||'')?process.env.TEST_STRIPE_BASE:null;
@@ -31,8 +33,8 @@ const toolkitBase64=process.env.TOOLKIT_BASE64||'';
 const toolkitBuffer=toolkitBase64&&toolkitBase64.length<250000?Buffer.from(toolkitBase64,'base64'):null;
 const validToolkit=Boolean(toolkitBuffer&&toolkitBuffer.length>100&&toolkitBuffer.subarray(0,2).toString()==='PK');
 const mailReady=Boolean((agentMailKey&&agentMailInbox==='aiadminaccelerator@agentmail.to')||(resendKey&&fromEmail));
-const configured=Boolean(stripeKey&&webhookSecret&&mailReady&&owner&&contact&&validToolkit&&sellerDetailsReady&&Object.values(PRODUCTS).every(p=>/^price_[A-Za-z0-9]+$/.test(p.price)));
-const enabled=configured&&process.env.LIVE_SALES_ENABLED==='true'&&process.env.LEGAL_READY==='true'&&process.env.FULFILMENT_TESTED==='true';
+const configured=Boolean((isLive||isTest)&&webhookSecret&&mailReady&&owner&&contact&&validToolkit&&sellerDetailsReady&&Object.values(PRODUCTS).every(p=>/^price_[A-Za-z0-9]+$/.test(p.price)));
+const enabled=configured&&(!isQASite||isTest)&&process.env.LIVE_SALES_ENABLED==='true'&&process.env.LEGAL_READY==='true'&&process.env.FULFILMENT_TESTED==='true';
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.ico':'image/x-icon','.svg':'image/svg+xml','.txt':'text/plain; charset=utf-8'};
 const hits=new Map();
 const sleep=()=>new Date().toISOString();
@@ -123,7 +125,7 @@ async function servePublic(req,res,pathname){
 const server=createServer(async(req,res)=>{
  const u=new URL(req.url,BASE),p=u.pathname;
  try{
-  if(req.method==='GET'&&p==='/api/health')return response(res,200,{ok:true,checkoutEnabled:enabled,mode:isLive?'live':stripeKey?'test':'unconfigured',supportEmailConfigured:Boolean(contact),sellerDetailsReady,emailTransportReady:mailReady,toolkitDeliveryReady:validToolkit,timestamp:sleep()});
+  if(req.method==='GET'&&p==='/api/health')return response(res,200,{ok:true,checkoutEnabled:enabled,mode:isLive?'live':isTest?'test':'unconfigured',siteStage:isQASite?'qa':'production',supportEmailConfigured:Boolean(contact),sellerDetailsReady,emailTransportReady:mailReady,toolkitDeliveryReady:validToolkit,timestamp:sleep()});
   if(req.method==='GET'&&p==='/api/config')return response(res,200,{checkoutReady:enabled,contactEmail:contact,offers:{toolkit:29,audit:149}});
   if(req.method==='POST'&&p==='/api/checkout'){
    if(!enabled)return response(res,503,{error:'Checkout is not yet open.'});
