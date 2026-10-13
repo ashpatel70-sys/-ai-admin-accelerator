@@ -63,3 +63,10 @@ The service was created from a public Git URL rather than an authenticated provi
 - Purchase confirmation emails now include seller identification, price, product, date, contact, recorded immediate-supply consent text and reference to cancellation guidance.
 - Published a cancellation-information and model-form page: `/cancellation.html`. This is an explanatory draft, not legal advice.
 - Checkout remains disabled; do not set `LEGAL_READY` to `true` until seller identity, address, tax and consumer-law review are complete. UK information requirements: GOV.UK Online and distance selling.
+
+## Trading name selected, 13 October 2026
+- Public trading/brand name selected by the business owner: **AI Admin Accelerator**. Do **not** imply it is an incorporated company or automatically the legal name of its operator.
+- No private residential or postal business address has been added to the publicly visible enquiry site. The current site accepts enquiries by email only and cannot process paid orders.
+- Terms, privacy and cancellation draft pages identify the public trading name; they disclose that the legal operator details are not finalised. The user has not authorised publication of a real postal address.
+- UK paid distance selling ordinarily requires the trader's legal identity and geographic address to be disclosed before an online order. The server's separate `PUBLIC_SELLER_LEGAL_NAME` and `PUBLIC_SELLER_POSTAL_ADDRESS` checks remain in place as a pre-sale hard gate; do not substitute the brand name for an actual legal identity.
+- The business name has not been registered with Companies House or protected as a trade mark by these website changes. The owner should check conflicts and determine sole trader/company status before paid sales.
