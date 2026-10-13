@@ -23,6 +23,9 @@ const legalPostal=process.env.PUBLIC_SELLER_POSTAL_ADDRESS||'';
 const sellerDetailsReady=Boolean(isQASite||(legalSeller.trim().length>=3&&legalPostal.trim().length>=12&&!/\[(seller|address|todo)\]/i.test(legalSeller+' '+legalPostal)));
 const stripeKey=process.env.STRIPE_SECRET_KEY||'';
 const webhookSecret=process.env.STRIPE_WEBHOOK_SECRET||'';
+const paymentLinkSecret=process.env.STRIPE_PAYMENT_LINK_WEBHOOK_SECRET||'';
+const paymentLinkIds={toolkit:process.env.STRIPE_PAYMENT_LINK_TOOLKIT||'',audit:process.env.STRIPE_PAYMENT_LINK_REVIEW||''};
+const paymentLinkUrls={toolkit:process.env.STRIPE_PAYMENT_URL_TOOLKIT||'',audit:process.env.STRIPE_PAYMENT_URL_REVIEW||''};
 const resendKey=process.env.RESEND_API_KEY||'';
 const agentMailKey=process.env.AGENTMAIL_API_KEY||'';
 const agentMailInbox=process.env.AGENTMAIL_INBOX||'aiadminaccelerator@agentmail.to';
@@ -39,6 +42,11 @@ const validToolkit=Boolean(toolkitBuffer&&toolkitBuffer.length>100&&toolkitBuffe
 const mailReady=Boolean((agentMailKey&&agentMailInbox==='aiadminaccelerator@agentmail.to')||(resendKey&&fromEmail));
 const configured=Boolean((isLive||isTest)&&webhookSecret&&mailReady&&owner&&contact&&validToolkit&&sellerDetailsReady&&Object.values(PRODUCTS).every(p=>/^price_[A-Za-z0-9]+$/.test(p.price)));
 const enabled=configured&&(isQASite?isTest:isLive)&&process.env.LIVE_SALES_ENABLED==='true'&&process.env.LEGAL_READY==='true'&&process.env.FULFILMENT_TESTED==='true';
+const linkReady=Boolean(!isQASite&&sellerDetailsReady&&agentMailKey&&validToolkit&&contact&&owner&&paymentLinkSecret.startsWith('whsec_')&&
+ /^[a-zA-Z0-9_]+$/.test(paymentLinkIds.toolkit)&&/^plink_/.test(paymentLinkIds.toolkit)&&/^plink_/.test(paymentLinkIds.audit)&&paymentLinkIds.toolkit!==paymentLinkIds.audit&&
+ /^https:\/\/buy\.stripe\.com\/[A-Za-z0-9]+$/.test(paymentLinkUrls.toolkit)&&/^https:\/\/buy\.stripe\.com\/[A-Za-z0-9]+$/.test(paymentLinkUrls.audit)&&
+ process.env.PAYMENT_LINK_SALES_ENABLED==='true'&&process.env.LEGAL_READY==='true'&&process.env.FULFILMENT_TESTED==='true');
+const deliveredLinkSessions=new Set(),pendingLinkSessions=new Set();
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.ico':'image/x-icon','.svg':'image/svg+xml','.txt':'text/plain; charset=utf-8'};
 const hits=new Map();
 const sleep=()=>new Date().toISOString();
@@ -62,12 +70,12 @@ async function stripe(method,endpoint,params){
  if(!r.ok)throw new Error('Stripe API error '+r.status);
  return data;
 }
-function signed(buffer,header){
- if(!webhookSecret||!header)return false;
+function signed(buffer,header,secret=webhookSecret){
+ if(!secret||!header)return false;
  const parts=header.split(',').map(x=>x.trim().split('='));
  const stamp=parts.find(x=>x[0]==='t')?.[1],proofs=parts.filter(x=>x[0]==='v1').map(x=>x[1]);
  if(!/^\d+$/.test(stamp||'')||Math.abs(Date.now()/1000-Number(stamp))>300)return false;
- const calculated=createHmac('sha256',webhookSecret).update(stamp+'.'+buffer.toString('utf8')).digest('hex');
+ const calculated=createHmac('sha256',secret).update(stamp+'.'+buffer.toString('utf8')).digest('hex');
  return proofs.some(p=>/^[a-f0-9]{64}$/i.test(p)&&timingSafeEqual(Buffer.from(p,'hex'),Buffer.from(calculated,'hex')));
 }
 function safe(str,max=1200){return typeof str==='string'?str.trim().slice(0,max):''}
@@ -82,19 +90,60 @@ async function paid(id){
  if(line.data?.length!==1||line.data[0].price?.id!==p.price||line.data[0].quantity!==1)return null;
  return s;
 }
-async function sendMail(to,subject,html,key){
+async function sendMail(to,subject,html,key,attachments=[]){
  if(isQASite){
   subject='[SANDBOX TEST — NO PAYMENT] '+subject;
   html='<p style="background:#fff1c0;color:#372a02;padding:12px;font-weight:bold">SANDBOX ONLY — simulated test payment. This is not a real order or commercial receipt.</p>'+html;
  }
  if(agentMailKey){
   const u=(localAgentMailBase||'https://api.agentmail.to/v0')+'/inboxes/'+encodeURIComponent(agentMailInbox)+'/messages/send';
-  const r=await fetch(u,{method:'POST',headers:{authorization:'Bearer '+agentMailKey,'content-type':'application/json'},body:JSON.stringify({to:[to],subject,html,text:html.replace(/<[^>]*>/g,' ').replace(/&amp;/g,'&')})});
+  const r=await fetch(u,{method:'POST',headers:{authorization:'Bearer '+agentMailKey,'content-type':'application/json'},body:JSON.stringify({to:[to],subject,html,text:html.replace(/<[^>]*>/g,' ').replace(/&amp;/g,'&'),...(attachments.length?{attachments}: {})})});
   if(!r.ok)throw new Error('AgentMail transactional email failed '+r.status);
   return;
  }
  const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{authorization:'Bearer '+resendKey,'content-type':'application/json','idempotency-key':key},body:JSON.stringify({from:fromEmail,to:[to],subject,html})});
  if(!r.ok)throw new Error('Transactional email failed '+r.status);
+}
+async function fulfilLinkEvent(event){
+ if(!['checkout.session.completed','checkout.session.async_payment_succeeded'].includes(event.type))return 'ignored';
+ const order=event.data?.object;
+ if(!order||order.payment_status!=='paid'||order.mode!=='payment'||!event.livemode||!order.livemode)return 'ignored';
+ const offer=order.metadata?.offer,p=PRODUCTS[offer],knownId=paymentLinkIds[offer];
+ if(!p||order.metadata?.store!=='ai-admin-accelerator'||order.metadata?.v!=='1'||
+  typeof knownId!=='string'||order.payment_link!==knownId||
+  order.amount_total!==p.amount||order.currency!=='gbp'||!/^cs_live_[A-Za-z0-9]+$/.test(order.id||''))return 'ignored';
+ const to=order.customer_details?.email||order.customer_email;
+ if(typeof to!=='string'||!/^\S+@\S+\.\S+$/.test(to)||to.length>250)throw new Error('Paid order customer email unavailable');
+ if(deliveredLinkSessions.has(order.id))return 'duplicate';
+ if(pendingLinkSessions.has(order.id))throw new Error('Fulfilment already in progress');
+ pendingLinkSessions.add(order.id);
+ try{
+  const item=escapeHTML(p.name),ref=escapeHTML(order.id),price=offer==='toolkit'?'£29.00':'£149.00';
+  const details='<p>Order reference: '+ref+'. Product: '+item+'. Total paid: '+price+' (GBP). Date: '+
+    escapeHTML(new Date((order.created||Math.floor(Date.now()/1000))*1000).toISOString().slice(0,10))+'.</p>'+
+    '<p>Seller: '+escapeHTML(legalSeller)+', trading as AI Admin Accelerator. Address: '+escapeHTML(legalPostal)+'.'+
+    ' Contact: '+escapeHTML(contact)+'.</p>'+
+    '<p>Terms: <a href="'+escapeHTML(BASE)+'/terms.html">View and save terms</a>. Cancellation and statutory rights: '+
+    '<a href="'+escapeHTML(BASE)+'/cancellation.html">View cancellation information and form</a>. '+
+    'For help or a refund request reply to this email. Your statutory rights remain unaffected.</p>';
+  if(offer==='toolkit'){
+   const zip={filename:'AI_Admin_Accelerator_Toolkit.zip',content_type:'application/zip',content_disposition:'attachment',content:toolkitBase64};
+   await sendMail(to,'Your £29 AI Admin Accelerator Toolkit — order '+order.id,
+    '<h2>Your download is attached</h2><p>Thank you for buying the AI Admin Toolkit. Save the attached ZIP file, extract it and open the included guide. This purchase is a one-time digital licence; no AI service subscription is included.</p>'+
+     details,'paid-toolkit-'+order.id,[zip]);
+  }else{
+   await sendMail(to,'Your £149 AI Workflow Review — order '+order.id,
+    '<h2>Thank you for your order</h2><p>Reply to this message with (1) your business name and sector, (2) the administrative workflow you want improved, (3) the software you use and (4) the outcome you want. Do not send passwords or sensitive customer data.</p>'+
+    '<p>A personalised written review is normally delivered within five UK working days after we receive a complete brief.</p>'+details,'paid-review-'+order.id);
+  }
+  deliveredLinkSessions.add(order.id);
+  if(deliveredLinkSessions.size>6000)deliveredLinkSessions.clear();
+  try{await sendMail(owner,'New paid '+(offer==='toolkit'?'£29 toolkit':'£149 review')+' order '+order.id,
+   '<p>Verified live Stripe Payment Link sale. Product: '+item+'. Buyer: '+escapeHTML(to)+'. Order: '+ref+'.'+
+   (offer==='audit'?' Watch for the customer\'s emailed workflow brief.':' The toolkit was sent as an email attachment.')+'</p>',
+   'owner-'+order.id);}catch(e){console.error('Owner order notice failed:',e.message)}
+  return 'fulfilled';
+ }finally{pendingLinkSessions.delete(order.id)}
 }
 async function fulfil(id){
  const order=await paid(id);if(!order||order.metadata?.fulfilment_email_sent==='yes')return;
@@ -135,16 +184,25 @@ const server=createServer(async(req,res)=>{
  const u=new URL(req.url,BASE),p=u.pathname;
  try{
   if(req.method==='GET'&&p==='/robots.txt')return response(res,200,(isQASite||!sellerDetailsReady)?'User-agent: *\nDisallow: /\n':'User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /success.html\n','text/plain; charset=utf-8');
-  if(req.method==='GET'&&p==='/api/health')return response(res,200,{ok:true,checkoutEnabled:enabled,mode:isLive?'live':isTest?'test':'unconfigured',siteStage:isQASite?'qa':'production',supportEmailConfigured:Boolean(contact),sellerDetailsReady,emailTransportReady:mailReady,toolkitDeliveryReady:validToolkit,timestamp:sleep()});
-  if(req.method==='GET'&&p==='/api/config')return response(res,200,{checkoutReady:enabled,sandbox:isQASite,contactEmail:contact,offers:{toolkit:29,audit:149}});
+  if(req.method==='GET'&&p==='/api/health')return response(res,200,{ok:true,checkoutEnabled:enabled||linkReady,paymentLinkReady:linkReady,mode:isLive?'live':isTest?'test':'unconfigured',siteStage:isQASite?'qa':'production',supportEmailConfigured:Boolean(contact),sellerDetailsReady,emailTransportReady:mailReady,toolkitDeliveryReady:validToolkit,timestamp:sleep()});
+  if(req.method==='GET'&&p==='/api/config')return response(res,200,{checkoutReady:enabled||linkReady,paymentLinkCheckout:linkReady,sandbox:isQASite,contactEmail:contact,offers:{toolkit:29,audit:149}});
   if(req.method==='POST'&&p==='/api/checkout'){
-   if(!enabled)return response(res,503,{error:'Checkout is not yet open.'});
+   if(!enabled&&!linkReady)return response(res,503,{error:'Checkout is not yet open.'});
    if(limit(req))return response(res,429,{error:'Too many requests'});
    const b=await body(req),offer=safe(b.offer,20);
    if(!Object.hasOwn(PRODUCTS,offer)||b.consent!==true)return response(res,400,{error:'Please choose a product and accept the terms.'});
+   if(linkReady)return response(res,200,{url:paymentLinkUrls[offer]});
    const params={mode:'payment','line_items[0][price]':PRODUCTS[offer].price,'line_items[0][quantity]':'1',success_url:BASE+'/success.html?session_id={CHECKOUT_SESSION_ID}',cancel_url:BASE+'/#pricing','customer_creation':'always','metadata[store]':'ai-admin-accelerator','metadata[offer]':offer,'metadata[consent_acknowledged]':'yes','metadata[consent_timestamp]':sleep()};
    const order=await stripe('POST','/checkout/sessions',params);
    return response(res,200,{url:order.url});
+  }
+  if(req.method==='POST'&&p==='/api/payment-link-webhook'){
+   if(!linkReady)return response(res,503,{error:'Payment-link fulfilment is not open'});
+   const data=await raw(req);
+   if(!signed(data,req.headers['stripe-signature'],paymentLinkSecret))return response(res,400,{error:'Invalid signature'});
+   const event=JSON.parse(data.toString('utf8'));
+   const result=await fulfilLinkEvent(event);
+   return response(res,200,{received:true,result});
   }
   if(req.method==='POST'&&p==='/api/stripe-webhook'){
    if(!configured)return response(res,503,{error:'Webhook not configured'});
