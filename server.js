@@ -20,6 +20,10 @@ const agentMailKey=process.env.AGENTMAIL_API_KEY||'';
 const agentMailInbox=process.env.AGENTMAIL_INBOX||'aiadminaccelerator@agentmail.to';
 const fromEmail=process.env.RESEND_FROM_EMAIL||'';
 const isLive=stripeKey.startsWith('sk_live_');
+// Integration-test endpoints are accepted ONLY on localhost in NODE_ENV=test.
+const localMockPattern=/^http:\/\/127\.0\.0\.1:\d+$/;
+const localStripeBase=process.env.NODE_ENV==='test'&&localMockPattern.test(process.env.TEST_STRIPE_BASE||'')?process.env.TEST_STRIPE_BASE:null;
+const localAgentMailBase=process.env.NODE_ENV==='test'&&localMockPattern.test(process.env.TEST_AGENTMAIL_BASE||'')?process.env.TEST_AGENTMAIL_BASE:null;
 const toolkitBase64=process.env.TOOLKIT_BASE64||'';
 const toolkitBuffer=toolkitBase64&&toolkitBase64.length<250000?Buffer.from(toolkitBase64,'base64'):null;
 const validToolkit=Boolean(toolkitBuffer&&toolkitBuffer.length>100&&toolkitBuffer.subarray(0,2).toString()==='PK');
@@ -45,7 +49,7 @@ async function body(req){try{return JSON.parse((await raw(req,15000)).toString('
 async function stripe(method,endpoint,params){
  const opts={method,headers:{authorization:'Bearer '+stripeKey}};
  if(params){opts.headers['content-type']='application/x-www-form-urlencoded';opts.body=new URLSearchParams(params).toString()}
- const r=await fetch('https://api.stripe.com/v1'+endpoint,opts);const data=await r.json();
+ const r=await fetch((localStripeBase||'https://api.stripe.com/v1')+endpoint,opts);const data=await r.json();
  if(!r.ok)throw new Error('Stripe API error '+r.status);
  return data;
 }
@@ -71,7 +75,7 @@ async function paid(id){
 }
 async function sendMail(to,subject,html,key){
  if(agentMailKey){
-  const u='https://api.agentmail.to/v0/inboxes/'+encodeURIComponent(agentMailInbox)+'/messages/send';
+  const u=(localAgentMailBase||'https://api.agentmail.to/v0')+'/inboxes/'+encodeURIComponent(agentMailInbox)+'/messages/send';
   const r=await fetch(u,{method:'POST',headers:{authorization:'Bearer '+agentMailKey,'content-type':'application/json'},body:JSON.stringify({to:[to],subject,html,text:html.replace(/<[^>]*>/g,' ').replace(/&amp;/g,'&')})});
   if(!r.ok)throw new Error('AgentMail transactional email failed '+r.status);
   return;
