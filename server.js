@@ -124,16 +124,17 @@ async function servePublic(req,res,pathname){
  }
  if(pathname==='/'){
   // Buttons are disabled in committed HTML; only our runtime JS may enable them after readiness checks.
-  const markup=data.toString('utf8').replace('</body>','<script defer src="/checkout.js"></script></body>');
+  const robotsMeta=!isQASite&&sellerDetailsReady?'index,follow':'noindex,nofollow';
+  const markup=data.toString('utf8').replace('<meta name="robots" content="noindex,nofollow">','<meta name="robots" content="'+robotsMeta+'">').replace('</body>','<script defer src="/checkout.js"></script></body>');
   data=Buffer.from(markup);
  }
  const ext=path.extname(file);
- response(res,200,req.method==='HEAD'?'':data,mime[ext]||'application/octet-stream',{'cache-control':'public,max-age=90','x-robots-tag':!isQASite&&pathname==='/'?'all':'noindex,nofollow'});
+ response(res,200,req.method==='HEAD'?'':data,mime[ext]||'application/octet-stream',{'cache-control':'public,max-age=90','x-robots-tag':!isQASite&&sellerDetailsReady&&pathname==='/'?'all':'noindex,nofollow'});
 }
 const server=createServer(async(req,res)=>{
  const u=new URL(req.url,BASE),p=u.pathname;
  try{
-  if(req.method==='GET'&&p==='/robots.txt')return response(res,200,isQASite?'User-agent: *\nDisallow: /\n':'User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /success.html\n','text/plain; charset=utf-8');
+  if(req.method==='GET'&&p==='/robots.txt')return response(res,200,(isQASite||!sellerDetailsReady)?'User-agent: *\nDisallow: /\n':'User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /success.html\n','text/plain; charset=utf-8');
   if(req.method==='GET'&&p==='/api/health')return response(res,200,{ok:true,checkoutEnabled:enabled,mode:isLive?'live':isTest?'test':'unconfigured',siteStage:isQASite?'qa':'production',supportEmailConfigured:Boolean(contact),sellerDetailsReady,emailTransportReady:mailReady,toolkitDeliveryReady:validToolkit,timestamp:sleep()});
   if(req.method==='GET'&&p==='/api/config')return response(res,200,{checkoutReady:enabled,sandbox:isQASite,contactEmail:contact,offers:{toolkit:29,audit:149}});
   if(req.method==='POST'&&p==='/api/checkout'){
