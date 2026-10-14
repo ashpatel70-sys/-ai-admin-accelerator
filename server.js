@@ -269,7 +269,7 @@ const server=createServer(async(req,res)=>{
  }catch(e){console.error('Request processing failed:',e.message);return response(res,500,{error:'The request could not be completed'});}
 });
 server.listen(PORT,()=>{
- console.log('AI Admin Accelerator commerce server listening on '+PORT+'; checkout '+(enabled?'ENABLED':'DISABLED'));
+ console.log('AI Admin Accelerator commerce server listening on '+PORT+'; checkout '+((enabled||linkReady)?'ENABLED':'DISABLED')+'; link fulfilment '+(linkReady?'READY':'NOT READY')+'; legal seller provided='+sellerDetailsReady);
  console.log('Launch diagnostics: AgentMail credential present='+Boolean(agentMailKey)+'; email transport configured='+mailReady+'; valid paid toolkit present='+validToolkit);
  // Strictly a self-addressed email. Only the actual Render runtime port runs the temporary test.
  // No API keys or email bodies are logged.
