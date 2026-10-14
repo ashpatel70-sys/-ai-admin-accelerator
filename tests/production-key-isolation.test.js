@@ -12,7 +12,7 @@ const child=spawn(process.execPath,['server.js'],{env:{
  PUBLIC_SELLER_LEGAL_NAME:'Example Fully Identified Sole Trader',
  PUBLIC_SELLER_POSTAL_ADDRESS:'19 Example Business Street, London W1A 1AA',
  TOOLKIT_BASE64:Buffer.concat([Buffer.from('PK'),Buffer.alloc(500,65)]).toString('base64'),
- LIVE_SALES_ENABLED:'true',LEGAL_READY:'true',FULFILMENT_TESTED:'true'
+ LIVE_SALES_ENABLED:'true',LEGAL_READY:'true',FULFILMENT_TESTED:'true',PAYMENT_LINK_SALES_ENABLED:'false'
 },stdio:'ignore'});
 after(()=>child.kill());
 async function req(url,init){
