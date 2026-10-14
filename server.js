@@ -180,7 +180,22 @@ async function servePublic(req,res,pathname){
  if(pathname==='/'){
   // Buttons are disabled in committed HTML; only our runtime JS may enable them after readiness checks.
   const robotsMeta=!isQASite&&sellerDetailsReady?'index,follow':'noindex,nofollow';
-  const markup=data.toString('utf8').replace('<meta name="robots" content="noindex,nofollow">','<meta name="robots" content="'+robotsMeta+'">').replace('</body>','<script defer src="/checkout.js"></script></body>');
+  let markup=data.toString('utf8').replace('<meta name="robots" content="noindex,nofollow">','<meta name="robots" content="'+robotsMeta+'">').replace('</body>','<script defer src="/checkout.js"></script></body>');
+  if(linkReady&&!isQASite){
+   const liveText=[
+    ['NOW OPEN FOR ENQUIRIES','NOW ACCEPTING SECURE ORDERS'],
+    ['Online checkout coming later','Card payments available now via Stripe'],
+    ['Online payments are not available yet.','Secure Stripe checkout is now available.'],
+    ['Checkout not yet available','Pay securely with Stripe'],
+    ['Get in touch — we are open for enquiries.','Questions about your order?'],
+    ['Enquiries are welcome now. No payments are accepted through this site.','Orders are open now. Pay securely via Stripe using the buttons above.'],
+    ['We are accepting product and service enquiries now. Online ordering will open once payment delivery tests and statutory seller details are finalised.','AI Admin Accelerator offers the digital AI Admin Toolkit and personalised workflow reviews, with secure Stripe card payments and email delivery.'],
+    ['© 2026 AI Admin Accelerator · Business enquiries open · Checkout currently closed.','© 2026 AI Admin Accelerator · Secure online checkout now available.'],
+    ['Online checkout is not yet enabled while we finish payment tests and statutory seller details.','Secure online checkout is now enabled.'],
+    ['Prices shown for preview only. Checkout is not yet available.','One-time purchases via secure Stripe checkout.']
+   ];
+   for(const [from,to] of liveText)markup=markup.replace(from,to);
+  }
   data=Buffer.from(markup);
  }
  const ext=path.extname(file);
