@@ -52,7 +52,7 @@ const linkReady=Boolean(!isQASite&&sellerDetailsReady&&agentMailKey&&validToolki
 const premiumOffers=['growth','sprint','transform'];
 const premiumReady=Boolean(linkReady&&premiumOffers.every(k=>/^plink_[A-Za-z0-9]+$/.test(paymentLinkIds[k])&&/^https:\/\/buy\.stripe\.com\/[A-Za-z0-9]+$/.test(paymentLinkUrls[k])&&/^price_[A-Za-z0-9]+$/.test(PRODUCTS[k].price))&&new Set(Object.values(paymentLinkIds)).size===5);
 const deliveredLinkSessions=new Set(),pendingLinkSessions=new Set();
-const SEARCH_LANDING_PAGES=new Set(['/','/ai-admin-toolkit.html','/ai-workflow-review.html']);
+const SEARCH_LANDING_PAGES=new Set(['/','/ai-admin-toolkit.html','/ai-workflow-review.html','/free-admin-time-calculator.html','/small-business-email-prompts.html']);
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.ico':'image/x-icon','.svg':'image/svg+xml','.xml':'application/xml; charset=utf-8','.txt':'text/plain; charset=utf-8'};
 const hits=new Map();
 const feedbackHits=new Map();
