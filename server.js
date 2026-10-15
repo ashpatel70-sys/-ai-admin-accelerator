@@ -192,10 +192,10 @@ async function servePublic(req,res,pathname){
 const server=createServer(async(req,res)=>{
  const u=new URL(req.url,BASE),p=u.pathname;
  try{
-  if(req.method==='GET'&&p==='/robots.txt')return response(res,200,(isQASite||!sellerDetailsReady)?'User-agent: *\nDisallow: /\\n':'User-agent: *\\nAllow: /\nDisallow: /api/\nDisallow: /success.html\nDisallow: /order-received.html\\nSitemap: '+BASE+'/sitemap.xml\\n','text/plain; charset=utf-8');
+  if(req.method==='GET'&&p==='/robots.txt')return response(res,200,(isQASite||!sellerDetailsReady)?'User-agent: *\nDisallow: /\n':'User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /success.html\nDisallow: /order-received.html\nSitemap: '+BASE+'/sitemap.xml\n','text/plain; charset=utf-8');
   if(req.method==='GET'&&p==='/sitemap.xml'){
    if(isQASite||!sellerDetailsReady)return response(res,404,'Sitemap is not available for this environment','text/plain; charset=utf-8');
-   const xml='<?xml version="1.0" encoding="UTF-8"?>\\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>'+escapeHTML(BASE)+'/</loc></url></urlset>';
+   const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>'+escapeHTML(BASE)+'/</loc></url></urlset>';
    return response(res,200,xml,'application/xml; charset=utf-8',{'cache-control':'public,max-age=3600'});
   }
   if(req.method==='GET'&&p==='/order-received.html'){
