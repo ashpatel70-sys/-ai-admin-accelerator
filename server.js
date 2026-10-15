@@ -121,8 +121,7 @@ async function fulfilLinkEvent(event){
   const item=escapeHTML(p.name),ref=escapeHTML(order.id),price=offer==='toolkit'?'£29.00':'£149.00';
   const details='<p>Order reference: '+ref+'. Product: '+item+'. Total paid: '+price+' (GBP). Date: '+
     escapeHTML(new Date((order.created||Math.floor(Date.now()/1000))*1000).toISOString().slice(0,10))+'.</p>'+
-    '<p>Seller: '+escapeHTML(legalSeller)+', trading as AI Admin Accelerator. Address: '+escapeHTML(legalPostal)+'.'+
-    ' Contact: '+escapeHTML(contact)+'.</p>'+
+    '<p>Business: AI Admin Accelerator. Customer support: '+escapeHTML(contact)+'.</p>'+ 
     '<p>Terms: <a href="'+escapeHTML(BASE)+'/terms.html">View and save terms</a>. Cancellation and statutory rights: '+
     '<a href="'+escapeHTML(BASE)+'/cancellation.html">View cancellation information and form</a>. '+
     'For help or a refund request reply to this email. Your statutory rights remain unaffected.</p>';
@@ -152,7 +151,7 @@ async function fulfil(id){
  const url=BASE+'/success.html?session_id='+encodeURIComponent(order.id);
  const link='<a href="'+escapeHTML(url)+'">Open your secure order page</a>';
  const orderPrice=order.metadata.offer==='toolkit'?'£29.00':'£149.00';
- const receipt='<p>Product: '+escapeHTML(PRODUCTS[order.metadata.offer].name)+'; '+(isQASite?'simulated test total':'total charged')+': '+orderPrice+' GBP; order date: '+escapeHTML(new Date(order.created*1000||Date.now()).toISOString().slice(0,10))+'.</p><p>'+(isQASite?'QA SANDBOX — no legal seller or geographic address applies to this simulated transaction.':'Seller: '+escapeHTML(legalSeller)+', '+escapeHTML(legalPostal)+'.')+' Support: '+escapeHTML(contact)+'.</p><p>Your checkout acknowledgement of early performance and applicable cancellation rights was recorded. For the digital download, you expressly agreed to immediate supply and acknowledged the applicable loss of the 14-day cancellation right once supply begins. Your statutory rights for faulty or misdescribed digital content are unaffected.</p><p>For cancellation and complaints: email '+escapeHTML(contact)+'. You can save these terms and cancellation guidance: '+escapeHTML(BASE)+'/terms.html and '+escapeHTML(BASE)+'/cancellation.html.</p>';
+ const receipt='<p>Product: '+escapeHTML(PRODUCTS[order.metadata.offer].name)+'; '+(isQASite?'simulated test total':'total charged')+': '+orderPrice+' GBP; order date: '+escapeHTML(new Date(order.created*1000||Date.now()).toISOString().slice(0,10))+'.</p><p>'+(isQASite?'QA SANDBOX — simulated transaction.':'Business: AI Admin Accelerator.')+' Support: '+escapeHTML(contact)+'.</p><p>Your checkout acknowledgement of early performance and applicable cancellation rights was recorded. For the digital download, you expressly agreed to immediate supply and acknowledged the applicable loss of the 14-day cancellation right once supply begins. Your statutory rights for faulty or misdescribed digital content are unaffected.</p><p>For cancellation and complaints: email '+escapeHTML(contact)+'. You can save these terms and cancellation guidance: '+escapeHTML(BASE)+'/terms.html and '+escapeHTML(BASE)+'/cancellation.html.</p>';
  if(order.metadata.offer==='toolkit'){
   await sendMail(to,'Your AI Admin Toolkit', '<p>Thank you for ordering.</p>'+receipt+'<p>'+link+' to download the toolkit.</p><p>Please keep your personal order link private.</p>', 'toolkit-'+id);
  }else{
@@ -166,17 +165,6 @@ async function servePublic(req,res,pathname){
  if(!file.startsWith(PUBLIC+path.sep))return response(res,403,'Forbidden','text/plain');
  const meta=await stat(file).catch(()=>null);if(!meta?.isFile())return response(res,404,'Not found','text/plain');
  let data=await readFile(file);
- if(pathname==='/terms.html'){
-  const traderDetails=sellerDetailsReady&&!isQASite?
-   '<p><strong>Legal seller:</strong> '+escapeHTML(legalSeller)+' (trading as AI Admin Accelerator). <strong>Business address:</strong> '+escapeHTML(legalPostal)+'.</p>':
-   '<p>Trading name: AI Admin Accelerator. Seller identity and business address are not yet finalised for paid ordering.</p>';
-  data=Buffer.from(data.toString('utf8').replace('<!--SELLER_DISCLOSURES-->',traderDetails));
- }
- if(pathname==='/terms.html'||pathname==='/privacy.html'){
-  // Public contract information appears only after it has been deliberately supplied by the owner.
-  const withSeller=data.toString('utf8').replaceAll('[SELLER LEGAL NAME]',escapeHTML(legalSeller)||'[SELLER LEGAL NAME]').replaceAll('[SELLER POSTAL ADDRESS]',escapeHTML(legalPostal)||'[SELLER POSTAL ADDRESS]');
-  data=Buffer.from(withSeller);
- }
  if(pathname==='/'){
   // Buttons are disabled in committed HTML; only our runtime JS may enable them after readiness checks.
   const robotsMeta=!isQASite&&sellerDetailsReady?'index,follow':'noindex,nofollow';
