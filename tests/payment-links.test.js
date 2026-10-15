@@ -110,7 +110,7 @@ test('new storefront shows London service map without a pin, expanded services a
  assert.match(html,/Client Onboarding Pack/);
  assert.match(html,/data-checkout-offer="toolkit"/);
  assert.match(html,/data-checkout-offer="audit"/);
- assert.match(html,/PayPal — activation pending/);
+ assert.match(html,/Secure card payments via Stripe/);assert.doesNotMatch(html,/PayPal — activation pending/);
  assert.doesNotMatch(html,/Example Test Trader|10 Example Street London/);
  const script=await req('/checkout.js');assert.equal(script.status,200);
  const code=await script.text();
