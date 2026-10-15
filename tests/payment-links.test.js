@@ -181,10 +181,10 @@ test('new searchable landing pages are listed in XML sitemap without exposing pr
  const sitemap=await req('/sitemap.xml');
  assert.equal(sitemap.status,200);
  const xml=await sitemap.text();
- for(const path of ['/','/ai-admin-toolkit.html','/ai-workflow-review.html']){
+ for(const path of ['/','/ai-admin-toolkit.html','/ai-workflow-review.html','/free-admin-time-calculator.html','/small-business-email-prompts.html']){
   assert.ok(xml.includes('<loc>https://ai-admin-accelerator-shop.onrender.com'+path+'</loc>'));
  }
- assert.equal((xml.match(/<url>/g)||[]).length,3);
+ assert.equal((xml.match(/<url>/g)||[]).length,5);
  for(const path of ['/terms.html','/privacy.html','/cancellation.html','/order-received.html']){
   const r=await req(path);assert.match(r.headers.get('x-robots-tag'),/noindex/);
   assert.doesNotMatch(xml,new RegExp(path.replaceAll('.','\\.')));
@@ -255,4 +255,33 @@ test('comments require same-origin, correct consent, and are privately emailed f
  assert.deepEqual(data.reviews,[],'Comments cannot become public until intentionally moderated');
  const notice=await (await req('/privacy.html')).text();
  assert.match(notice,/Customer comments and ratings/);
+});
+
+
+test('free acquisition pages are crawlable in production and contain useful working examples',async()=>{
+ const home=await (await req('/')).text();
+ assert.match(home,/id="free-tools"/);
+ for(const name of ['free-admin-time-calculator.html','small-business-email-prompts.html']){
+  assert.ok(home.includes('href="/'+name+'"'));
+  const r=await req('/'+name);
+  assert.equal(r.status,200);
+  assert.equal(r.headers.get('x-robots-tag'),'index,follow');
+  const html=await r.text();
+  assert.match(html,/<meta name="robots" content="index,follow">/);
+  assert.ok(html.includes('<link rel="canonical" href="https://ai-admin-accelerator-shop.onrender.com/'+name+'">'));
+  assert.equal(html.split('<h1').length-1,1);
+  assert.doesNotMatch(html,/Example Test Trader|10 Example Street London/);
+  assert.match(html,/ai-admin-toolkit.html/);
+  assert.match(html,/application\/ld\+json/);
+ }
+ const calc=await (await req('/free-admin-time-calculator.html')).text();
+ assert.match(calc,/id="week-saved"/);
+ assert.match(calc,/id="hourly-rate"/);
+ assert.match(calc,/52\/12|52 \\u00f7 12/);
+ assert.match(calc,/scenario calculator/);
+ assert.match(calc,/utm_source=calculator/);
+ const prompts=await (await req('/small-business-email-prompts.html')).text();
+ assert.equal((prompts.match(/class="copy-example"/g)||[]).length,5);
+ assert.match(prompts,/No subscription|No sign-up|No account|No sign-up required/i);
+ assert.match(prompts,/Do not invent pricing/);
 });
