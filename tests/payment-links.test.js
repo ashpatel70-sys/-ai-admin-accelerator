@@ -83,3 +83,16 @@ test('customer return page provides fulfilment and refund instructions',async()=
  const r=await req('/order-received.html');assert.equal(r.status,200);
  const t=await r.text();assert.match(t,/emailed|email attachment/);assert.match(t,/Cancellation rights/);
 });
+
+test('legal seller personal details are kept off storefront and privacy page, but remain accessible in pre-sale terms',async()=>{
+ const homepage=await req('/');assert.equal(homepage.status,200);
+ const home=await homepage.text();assert.doesNotMatch(home,/Example Test Trader|10 Example Street London/);
+ const privacy=await req('/privacy.html');assert.equal(privacy.status,200);
+ const notice=await privacy.text();assert.doesNotMatch(notice,/Example Test Trader|10 Example Street London/);
+ assert.match(notice,/Terms of Service/);
+ const terms=await req('/terms.html');assert.equal(terms.status,200);
+ const disclosures=await terms.text();assert.match(disclosures,/Example Test Trader/);
+ assert.match(disclosures,/10 Example Street London/);
+ assert.match(terms.headers.get('x-robots-tag'),/noindex/);
+ assert.match(terms.headers.get('cache-control'),/no-store/);
+});
