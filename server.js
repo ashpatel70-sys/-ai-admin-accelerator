@@ -47,6 +47,7 @@ const linkReady=Boolean(!isQASite&&sellerDetailsReady&&agentMailKey&&validToolki
  /^https:\/\/buy\.stripe\.com\/[A-Za-z0-9]+$/.test(paymentLinkUrls.toolkit)&&/^https:\/\/buy\.stripe\.com\/[A-Za-z0-9]+$/.test(paymentLinkUrls.audit)&&
  process.env.PAYMENT_LINK_SALES_ENABLED==='true'&&process.env.LEGAL_READY==='true'&&process.env.FULFILMENT_TESTED==='true');
 const deliveredLinkSessions=new Set(),pendingLinkSessions=new Set();
+const SEARCH_LANDING_PAGES=new Set(['/','/ai-admin-toolkit.html','/ai-workflow-review.html']);
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.ico':'image/x-icon','.svg':'image/svg+xml','.xml':'application/xml; charset=utf-8','.txt':'text/plain; charset=utf-8'};
 const hits=new Map();
 const sleep=()=>new Date().toISOString();
@@ -185,9 +186,13 @@ async function servePublic(req,res,pathname){
    for(const [from,to] of liveText)markup=markup.replace(from,to);
   }
   data=Buffer.from(markup);
+ }else if(SEARCH_LANDING_PAGES.has(pathname)){
+  // Only legally ready production pages may permit search indexing; QA defaults to noindex.
+  const robotsMeta=!isQASite&&sellerDetailsReady?'index,follow':'noindex,nofollow';
+  data=Buffer.from(data.toString('utf8').replace('<meta name="robots" content="noindex,nofollow">','<meta name="robots" content="'+robotsMeta+'">'));
  }
  const ext=path.extname(file);
- response(res,200,req.method==='HEAD'?'':data,mime[ext]||'application/octet-stream',{'cache-control':pathname==='/terms.html'?'no-store':'public,max-age=90','x-robots-tag':!isQASite&&sellerDetailsReady&&pathname==='/'?'all':'noindex,nofollow'});
+ response(res,200,req.method==='HEAD'?'':data,mime[ext]||'application/octet-stream',{'cache-control':pathname==='/terms.html'?'no-store':'public,max-age=90','x-robots-tag':!isQASite&&sellerDetailsReady&&SEARCH_LANDING_PAGES.has(pathname)?'index,follow':'noindex,nofollow'});
 }
 const server=createServer(async(req,res)=>{
  const u=new URL(req.url,BASE),p=u.pathname;
@@ -195,7 +200,7 @@ const server=createServer(async(req,res)=>{
   if(req.method==='GET'&&p==='/robots.txt')return response(res,200,(isQASite||!sellerDetailsReady)?'User-agent: *\nDisallow: /\n':'User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /success.html\nDisallow: /order-received.html\nSitemap: '+BASE+'/sitemap.xml\n','text/plain; charset=utf-8');
   if(req.method==='GET'&&p==='/sitemap.xml'){
    if(isQASite||!sellerDetailsReady)return response(res,404,'Sitemap is not available for this environment','text/plain; charset=utf-8');
-   const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>'+escapeHTML(BASE)+'/</loc></url></urlset>';
+   const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+Array.from(SEARCH_LANDING_PAGES).map(item=>'<url><loc>'+escapeHTML(BASE+item)+'</loc></url>').join('')+'</urlset>';
    return response(res,200,xml,'application/xml; charset=utf-8',{'cache-control':'public,max-age=3600'});
   }
   if(req.method==='GET'&&p==='/order-received.html'){
