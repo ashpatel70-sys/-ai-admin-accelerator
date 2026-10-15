@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Free Admin Time-Savings Calculator | AI Admin Accelerator</title>
+<meta name="description" content="Calculate how much time your business could save on repetitive administration. Free, interactive UK business time and cost estimator—no sign-up needed.">
+<link rel="canonical" href="https://ai-admin-accelerator-shop.onrender.com/free-admin-time-calculator.html"><link rel="icon" href="/brand-mark.svg" type="image/svg+xml"><link rel="stylesheet" href="/offer-pages.css">
+<meta property="og:type" content="website"><meta property="og:title" content="Free Admin Time-Savings Calculator"><meta property="og:description" content="How much time does repetitive admin cost your business? Estimate the potential time saved with a free calculator."><meta property="og:url" content="https://ai-admin-accelerator-shop.onrender.com/free-admin-time-calculator.html"><meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Free Admin Time-Savings Calculator","url":"https://ai-admin-accelerator-shop.onrender.com/free-admin-time-calculator.html","applicationCategory":"BusinessApplication","operatingSystem":"Web browser","description":"Free interactive calculator estimating potential administrative time released if routine business tasks become faster.","offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"},"publisher":{"@type":"Organization","name":"AI Admin Accelerator","url":"https://ai-admin-accelerator-shop.onrender.com/"}}</script>
+<style>
+.calc-shell{background:#fff;border:1px solid #dce5f3;border-radius:23px;padding:clamp(22px,3vw,36px);box-shadow:0 22px 65px #1c376a14;margin-top:24px}
+.calc-layout{display:grid;grid-template-columns:1fr 1fr;gap:25px}
+.calc-fields{display:grid;gap:18px}
+.calc-fields label{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center;color:#233752;font-weight:720;font-size:.89rem}
+.calc-fields label small{display:block;color:#6f8297;font-weight:430;font-size:.77rem}
+.calc-fields input{width:125px;padding:12px;border:1px solid #cbd9eb;border-radius:10px;background:#fafcff;color:#142a4a;font:600 1rem system-ui}
+.calc-fields input:focus{outline:3px solid #8db1ff}
+.calc-results{padding:26px;border-radius:17px;background:linear-gradient(135deg,#17325e,#356de0);color:white;display:grid;gap:18px;align-content:start}
+.calc-results h2{font-size:1rem;margin:0;color:#d8e6ff;letter-spacing:0}
+.calc-total{font-size:clamp(2.8rem,6vw,4.2rem);font-weight:820;letter-spacing:-.08em;line-height:1}
+.calc-results small{font-size:.78rem;color:#d4e0f5}
+.calc-stat{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid #ffffff33;padding-top:15px}
+.calc-stat strong{font-size:1.2rem}
+.calculator-notice{margin:18px 0 0;color:#617087;font-size:.77rem;line-height:1.65}
+.free-callout{border:1px solid #d7e5f5;background:#eff5ff;border-radius:15px;padding:20px;margin-top:22px;display:flex;justify-content:space-between;gap:18px;align-items:center}
+.free-callout p{margin:0!important;font-size:.89rem}
+.share-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:21px}
+.share-tools a,.share-tools button{cursor:pointer;border:1px solid #bdcee7;color:#315caa;background:#fff;padding:10px 14px;border-radius:10px;font:650 .81rem system-ui;text-decoration:none}
+.share-tools a:hover,.share-tools button:hover{background:#e7efff}
+@media(max-width:760px){.calc-layout{grid-template-columns:1fr}.calc-results{min-height:0}.free-callout{display:block}.free-callout .button{margin-top:14px}.calc-shell{padding:20px}.calc-fields label{align-items:start}}
+</style></head>
+<body><header class="nav"><div class="wrap"><a class="brand" href="/" aria-label="AI Admin Accelerator homepage"><img src="/brand-mark.svg" width="44" height="44" alt=""><span>AI Admin<br>Accelerator</span></a><a href="/#products">Explore paid tools →</a></div></header>
+<main><section class="hero"><div class="wrap"><nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> / Free admin time calculator</nav>
+<span class="eyebrow">Free resource · No login needed</span><h1>How much time is routine admin taking from your business?</h1>
+<p class="lede">Estimate the time you might reclaim by improving one repetitive task. Enter your current and proposed timings to see a transparent, illustrative calculation.</p>
+<div class="calc-shell" id="calculator"><div class="calc-layout"><div class="calc-fields">
+<label for="task-count"><span>How often do you do the task?<small>Number of repeats per week</small></span><input id="task-count" type="number" value="15" min="0" max="10000" step="1" inputmode="numeric"></label>
+<label for="old-minutes"><span>How long does it take now?<small>Minutes for one task</small></span><input id="old-minutes" type="number" value="12" min="0" max="1440" step=".5" inputmode="decimal"></label>
+<label for="new-minutes"><span>What could it take after improvement?<small>Minutes for the same task</small></span><input id="new-minutes" type="number" value="8" min="0" max="1440" step=".5" inputmode="decimal"></label>
+<label for="hourly-rate"><span>Estimated hourly cost of your time?<small>£ per hour; optional value estimate</small></span><input id="hourly-rate" type="number" value="20" min="0" max="1000" step="1" inputmode="decimal"></label>
+</div><div class="calc-results" aria-live="polite" aria-atomic="true"><h2>Estimated time released</h2><div><div class="calc-total" id="week-saved">1.0 hours</div><small>Potential time saved each week</small></div><div class="calc-stat"><span>Per month (52 ÷ 12 weeks)</span><strong id="month-saved">4.3 hours</strong></div><div class="calc-stat"><span>Per year (52 weeks)</span><strong id="year-saved">52 hours</strong></div><div class="calc-stat"><span>Annual time value</span><strong id="annual-value">£1,040</strong></div></div></div>
+<p class="calculator-notice">Calculation: (weekly repetitions × (current minutes − improved minutes)) ÷ 60 = hours per week. A year assumes 52 working weeks and a month is 52 ÷ 12 weeks. If the new task takes longer, estimated savings are shown as zero. This is a scenario calculator—not a prediction, verified performance claim, guaranteed cost reduction or cash saving. Time may be reallocated rather than reducing expenditure. Your inputs stay in your browser and are not sent to our server.</p></div>
+<div class="share-tools" aria-label="Share this free calculator"><strong>Share the free calculator</strong><a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fai-admin-accelerator-shop.onrender.com%2Ffree-admin-time-calculator.html%3Futm_source%3Dlinkedin%26utm_medium%3Dsocial%26utm_campaign%3Dfree_admin_calculator" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a><a href="https://twitter.com/intent/tweet?text=Curious%20how%20much%20admin%20time%20your%20business%20could%20reclaim%3F%20Try%20this%20free%20calculator.&url=https%3A%2F%2Fai-admin-accelerator-shop.onrender.com%2Ffree-admin-time-calculator.html%3Futm_source%3Dx%26utm_medium%3Dsocial%26utm_campaign%3Dfree_admin_calculator" target="_blank" rel="noopener noreferrer">X ↗</a><a href="https://api.whatsapp.com/send?text=Free%20admin%20time%20calculator%3A%20https%3A%2F%2Fai-admin-accelerator-shop.onrender.com%2Ffree-admin-time-calculator.html%3Futm_source%3Dwhatsapp%26utm_medium%3Dsocial%26utm_campaign%3Dfree_admin_calculator" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a><button type="button" id="copy-resource-link">Copy link</button><span id="copy-result" aria-live="polite"></span></div>
+</div></section>
+<section class="section"><div class="wrap"><div class="grid"><article class="card"><h3>Start with one workflow</h3><p>Use real estimates for a single activity: answering standard customer emails, preparing meeting notes, or transferring details between documents.</p></article><article class="card"><h3>Consider quality as well as speed</h3><p>Automating a poor process can make mistakes faster. Always allow time to check accuracy, security, accessibility and customer outcomes.</p></article><article class="card"><h3>Run a small real-world test</h3><p>Time several repeats before and after a process change. Record the full effort, including review and corrections, then update your assumptions here.</p></article></div></div></section>
+<section class="section soft"><div class="wrap split"><div><span class="eyebrow">Example workflow</span><h2>A simple way to reduce repetitive email admin</h2><p>Write down the recurring question, what the answer must contain and any approval needed. Prepare an editable response structure, customise it for each case and check accuracy before sending.</p><p>Use the <a href="/small-business-email-prompts.html">free customer email prompt guide</a> for practical examples, then measure whether the result is actually faster.</p></div><div><h2>Need ready-to-use templates?</h2><p>The <a href="/ai-admin-toolkit.html">£29 AI Admin Toolkit</a> contains editable prompts and business templates. If you need independent advice about a more complex workflow, consider the <a href="/ai-workflow-review.html">£149 written Workflow Review</a>.</p><div class="actions"><a class="button" href="/ai-admin-toolkit.html?utm_source=calculator&utm_medium=referral&utm_campaign=free_tool">Explore the £29 toolkit →</a><a class="button secondary" href="/ai-workflow-review.html?utm_source=calculator&utm_medium=referral&utm_campaign=free_tool">Explore the £149 review</a></div></div></div></section>
+<div class="wrap"><div class="banner"><div><h2>Improve a workflow, not just a number.</h2><p>Our reusable templates are a practical first step for everyday administration.</p></div><a class="button" href="/#products">Explore all five prices →</a></div></div></main>
+<footer><div class="wrap"><span>© 2026 AI Admin Accelerator · Free business resource; no performance guarantee.</span><nav aria-label="Footer navigation"><a href="/">Home</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:aiadminaccelerator@agentmail.to">Support</a></nav></div></footer>
+<script>
+(function(){
+  'use strict';
+  const ids=['task-count','old-minutes','new-minutes','hourly-rate'];
+  const elems=ids.map(id=>document.getElementById(id));
+  const gbp=new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',maximumFractionDigits:0});
+  const amount=id=>{const e=document.getElementById(id),n=Number(e.value);return Number.isFinite(n)?Math.max(0,Math.min(Number(e.max)||10000,n)):0};
+  function refresh(){
+    const tasks=amount('task-count'),before=amount('old-minutes'),after=amount('new-minutes'),rate=amount('hourly-rate');
+    const weekly=tasks*Math.max(0,before-after)/60,monthly=weekly*52/12,annual=weekly*52;
+    document.getElementById('week-saved').textContent=weekly.toFixed(1)+' hours';
+    document.getElementById('month-saved').textContent=monthly.toFixed(1)+' hours';
+    document.getElementById('year-saved').textContent=annual.toFixed(1)+' hours';
+    document.getElementById('annual-value').textContent=gbp.format(annual*rate);
+  }
+  elems.forEach(x=>x.addEventListener('input',refresh));refresh();
+  document.getElementById('copy-resource-link').addEventListener('click',async()=>{
+    const url='https://ai-admin-accelerator-shop.onrender.com/free-admin-time-calculator.html?utm_source=copy_link&utm_medium=share&utm_campaign=free_admin_calculator';
+    const status=document.getElementById('copy-result');
+    try{await navigator.clipboard.writeText(url);status.textContent='Link copied';}catch{status.textContent='Copy this URL: '+url;}
+  });
+})();
+</script></body></html>
