@@ -14,7 +14,10 @@ const QA_PRICE_TOOLKIT='price_1UPzSbDZ2uwtomrMbnbVLK5x';
 const QA_PRICE_REVIEW='price_1UPzSkDZ2uwtomrMm8kCkPl6';
 const PRODUCTS={
  toolkit:{name:'AI Admin Toolkit',amount:2900,price:process.env.STRIPE_PRICE_TOOLKIT||(isQASite?QA_PRICE_TOOLKIT:'')},
- audit:{name:'AI Workflow Review',amount:14900,price:process.env.STRIPE_PRICE_REVIEW||(isQASite?QA_PRICE_REVIEW:'')}
+ audit:{name:'AI Workflow Review',amount:14900,price:process.env.STRIPE_PRICE_REVIEW||(isQASite?QA_PRICE_REVIEW:'')},
+ growth:{name:'Growth Bundle',amount:29900,price:process.env.STRIPE_PRICE_GROWTH||''},
+ sprint:{name:'Team Productivity Sprint',amount:59900,price:process.env.STRIPE_PRICE_SPRINT||''},
+ transform:{name:'Operations Transformation Planning',amount:99900,price:process.env.STRIPE_PRICE_TRANSFORM||''}
 };
 const contact=process.env.PUBLIC_CONTACT_EMAIL||'';
 const owner=process.env.OWNER_EMAIL||'';
@@ -24,8 +27,8 @@ const sellerDetailsReady=Boolean(isQASite||(legalSeller.trim().length>=3&&legalP
 const stripeKey=process.env.STRIPE_SECRET_KEY||'';
 const webhookSecret=process.env.STRIPE_WEBHOOK_SECRET||'';
 const paymentLinkSecret=process.env.STRIPE_PAYMENT_LINK_WEBHOOK_SECRET||'';
-const paymentLinkIds={toolkit:process.env.STRIPE_PAYMENT_LINK_TOOLKIT||'',audit:process.env.STRIPE_PAYMENT_LINK_REVIEW||''};
-const paymentLinkUrls={toolkit:process.env.STRIPE_PAYMENT_URL_TOOLKIT||'',audit:process.env.STRIPE_PAYMENT_URL_REVIEW||''};
+const paymentLinkIds={toolkit:process.env.STRIPE_PAYMENT_LINK_TOOLKIT||'',audit:process.env.STRIPE_PAYMENT_LINK_REVIEW||'',growth:process.env.STRIPE_PAYMENT_LINK_GROWTH||'',sprint:process.env.STRIPE_PAYMENT_LINK_SPRINT||'',transform:process.env.STRIPE_PAYMENT_LINK_TRANSFORM||''};
+const paymentLinkUrls={toolkit:process.env.STRIPE_PAYMENT_URL_TOOLKIT||'',audit:process.env.STRIPE_PAYMENT_URL_REVIEW||'',growth:process.env.STRIPE_PAYMENT_URL_GROWTH||'',sprint:process.env.STRIPE_PAYMENT_URL_SPRINT||'',transform:process.env.STRIPE_PAYMENT_URL_TRANSFORM||''};
 const resendKey=process.env.RESEND_API_KEY||'';
 const agentMailKey=process.env.AGENTMAIL_API_KEY||'';
 const agentMailInbox=process.env.AGENTMAIL_INBOX||'aiadminaccelerator@agentmail.to';
@@ -40,12 +43,14 @@ const toolkitBase64=process.env.TOOLKIT_BASE64||'';
 const toolkitBuffer=toolkitBase64&&toolkitBase64.length<250000?Buffer.from(toolkitBase64,'base64'):null;
 const validToolkit=Boolean(toolkitBuffer&&toolkitBuffer.length>100&&toolkitBuffer.subarray(0,2).toString()==='PK');
 const mailReady=Boolean((agentMailKey&&agentMailInbox==='aiadminaccelerator@agentmail.to')||(resendKey&&fromEmail));
-const configured=Boolean((isLive||isTest)&&webhookSecret&&mailReady&&owner&&contact&&validToolkit&&sellerDetailsReady&&Object.values(PRODUCTS).every(p=>/^price_[A-Za-z0-9]+$/.test(p.price)));
+const configured=Boolean((isLive||isTest)&&webhookSecret&&mailReady&&owner&&contact&&validToolkit&&sellerDetailsReady&&['toolkit','audit'].every(k=>/^price_[A-Za-z0-9]+$/.test(PRODUCTS[k].price)));
 const enabled=configured&&(isQASite?isTest:isLive)&&process.env.LIVE_SALES_ENABLED==='true'&&process.env.LEGAL_READY==='true'&&process.env.FULFILMENT_TESTED==='true';
 const linkReady=Boolean(!isQASite&&sellerDetailsReady&&agentMailKey&&validToolkit&&contact&&owner&&paymentLinkSecret.startsWith('whsec_')&&
  /^[a-zA-Z0-9_]+$/.test(paymentLinkIds.toolkit)&&/^plink_/.test(paymentLinkIds.toolkit)&&/^plink_/.test(paymentLinkIds.audit)&&paymentLinkIds.toolkit!==paymentLinkIds.audit&&
  /^https:\/\/buy\.stripe\.com\/[A-Za-z0-9]+$/.test(paymentLinkUrls.toolkit)&&/^https:\/\/buy\.stripe\.com\/[A-Za-z0-9]+$/.test(paymentLinkUrls.audit)&&
  process.env.PAYMENT_LINK_SALES_ENABLED==='true'&&process.env.LEGAL_READY==='true'&&process.env.FULFILMENT_TESTED==='true');
+const premiumOffers=['growth','sprint','transform'];
+const premiumReady=Boolean(linkReady&&premiumOffers.every(k=>/^plink_[A-Za-z0-9]+$/.test(paymentLinkIds[k])&&/^https:\/\/buy\.stripe\.com\/[A-Za-z0-9]+$/.test(paymentLinkUrls[k])&&/^price_[A-Za-z0-9]+$/.test(PRODUCTS[k].price))&&new Set(Object.values(paymentLinkIds)).size===5);
 const deliveredLinkSessions=new Set(),pendingLinkSessions=new Set();
 const SEARCH_LANDING_PAGES=new Set(['/','/ai-admin-toolkit.html','/ai-workflow-review.html']);
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.ico':'image/x-icon','.svg':'image/svg+xml','.xml':'application/xml; charset=utf-8','.txt':'text/plain; charset=utf-8'};
@@ -119,7 +124,7 @@ async function fulfilLinkEvent(event){
  if(pendingLinkSessions.has(order.id))throw new Error('Fulfilment already in progress');
  pendingLinkSessions.add(order.id);
  try{
-  const item=escapeHTML(p.name),ref=escapeHTML(order.id),price=offer==='toolkit'?'£29.00':'£149.00';
+  const item=escapeHTML(p.name),ref=escapeHTML(order.id),price='£'+(p.amount/100).toFixed(2);
   const details='<p>Order reference: '+ref+'. Product: '+item+'. Total paid: '+price+' (GBP). Date: '+
     escapeHTML(new Date((order.created||Math.floor(Date.now()/1000))*1000).toISOString().slice(0,10))+'.</p>'+
     '<p>Business: AI Admin Accelerator. Customer support: '+escapeHTML(contact)+'.</p>'+ 
@@ -131,16 +136,27 @@ async function fulfilLinkEvent(event){
    await sendMail(to,'Your £29 AI Admin Accelerator Toolkit — order '+order.id,
     '<h2>Your download is attached</h2><p>Thank you for buying the AI Admin Toolkit. Save the attached ZIP file, extract it and open the included guide. This purchase is a one-time digital licence; no AI service subscription is included.</p>'+
      details,'paid-toolkit-'+order.id,[zip]);
-  }else{
+  }else if(offer==='audit'){
    await sendMail(to,'Your £149 AI Workflow Review — order '+order.id,
     '<h2>Thank you for your order</h2><p>Reply to this message with (1) your business name and sector, (2) the administrative workflow you want improved, (3) the software you use and (4) the outcome you want. Do not send passwords or sensitive customer data.</p>'+
     '<p>A personalised written review is normally delivered within five UK working days after we receive a complete brief.</p>'+details,'paid-review-'+order.id);
+  }else{
+   const scopes={
+    growth:'Up to three admin workflows, a written improvement plan, recommendations for templates or SOP structures and one 30-minute remote follow-up consultation.',
+    sprint:'Assessment of up to four admin workflows, a written improvement roadmap and training plan, plus one 60-minute remote workshop for up to four participants.',
+    transform:'Discovery of up to five admin workflows, a prioritised strategy and documentation plan, stakeholder adoption guidance and two remote consultation sessions of up to 60 minutes each.'
+   };
+   await sendMail(to,'Your '+p.name+' — paid order '+order.id,
+     '<h2>Paid order confirmed — your next steps</h2><p>Thank you for booking '+item+'. This is a one-off remote business service, not a subscription.</p><p><strong>Included scope:</strong> '+escapeHTML(scopes[offer])+'</p>'+
+     '<p>Please reply with (1) business name and sector, (2) a description of the workflows you want reviewed, (3) tools used, (4) desired outcomes, (5) participant count if relevant, and (6) preferred dates. Do not send passwords or sensitive customer records.</p>'+
+     '<p>We will review your brief and coordinate a suitable timetable for your booked service. Custom software builds, integration deployment and indefinite support are not included. If no suitable schedule can be agreed, contact us promptly about cancellation and refund arrangements.</p>'+details,
+     'paid-service-'+offer+'-'+order.id);
   }
   deliveredLinkSessions.add(order.id);
   if(deliveredLinkSessions.size>6000)deliveredLinkSessions.clear();
-  try{await sendMail(owner,'New paid '+(offer==='toolkit'?'£29 toolkit':'£149 review')+' order '+order.id,
+  try{await sendMail(owner,'New paid '+price+' '+p.name+' order '+order.id,
    '<p>Verified live Stripe Payment Link sale. Product: '+item+'. Buyer: '+escapeHTML(to)+'. Order: '+ref+'.'+
-   (offer==='audit'?' Watch for the customer\'s emailed workflow brief.':' The toolkit was sent as an email attachment.')+'</p>',
+   (offer==='toolkit'?' The toolkit was sent as an email attachment.':' The buyer was instructed to send their complete service brief and scheduling preferences.')+'</p>',
    'owner-'+order.id);}catch(e){console.error('Owner order notice failed:',e.message)}
   return 'fulfilled';
  }finally{pendingLinkSessions.delete(order.id)}
@@ -204,16 +220,17 @@ const server=createServer(async(req,res)=>{
    return response(res,200,xml,'application/xml; charset=utf-8',{'cache-control':'public,max-age=3600'});
   }
   if(req.method==='GET'&&p==='/order-received.html'){
-   const html='<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Thank you | AI Admin Accelerator</title><style>body{font:16px/1.65 system-ui,-apple-system,sans-serif;background:#f4f7fc;color:#172441;padding:16px}main{background:white;max-width:720px;margin:48px auto;padding:30px;border-radius:16px}a{color:#5159d8}</style></head><body><main><p><a href="/">AI Admin Accelerator</a></p><h1>Thank you for your order</h1><p>Your payment is being verified directly with Stripe. We will email your order confirmation and product delivery to the address you used at checkout.</p><h2>AI Admin Toolkit — £29</h2><p>Following verified payment, your downloadable ZIP toolkit is sent as an email attachment. Check your junk folder. If it is not received by the next UK working day, contact support.</p><h2>AI Workflow Review — £149</h2><p>Reply to the order email with your business sector, current workflow, software and goals. Your written review is normally delivered within five UK working days after receipt of a complete brief.</p><p>Support, cancellations and refunds: <a href="mailto:aiadminaccelerator@agentmail.to">aiadminaccelerator@agentmail.to</a>.</p><p><a href="/terms.html">Terms</a> · <a href="/cancellation.html">Cancellation rights</a> · <a href="/privacy.html">Privacy</a></p></main></body></html>';
+   const html='<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Thank you | AI Admin Accelerator</title><style>body{font:16px/1.65 system-ui,-apple-system,sans-serif;background:#f4f7fc;color:#172441;padding:16px}main{background:white;max-width:720px;margin:48px auto;padding:30px;border-radius:16px}a{color:#5159d8}</style></head><body><main><p><a href="/">AI Admin Accelerator</a></p><h1>Thank you for your order</h1><p>Your payment is being verified directly with Stripe. We will email your order confirmation and product delivery to the address you used at checkout.</p><h2>AI Admin Toolkit — £29</h2><p>Following verified payment, your downloadable ZIP toolkit is sent as an email attachment. Check your junk folder. If it is not received by the next UK working day, contact support.</p><h2>AI Workflow Review — £149</h2><p>Reply to the order email with your business sector, current workflow, software and goals. Your written review is normally delivered within five UK working days after receipt of a complete brief.</p><h2>Growth Bundle — £299 · Team Productivity Sprint — £599 · Operations Transformation Planning — £999</h2><p>Reply to your payment confirmation email with your business workflow brief and preferred dates. We will contact you to agree the remote engagement timetable. See the Terms for fixed service scopes and your cancellation rights.</p><p>Support, cancellations and refunds: <a href="mailto:aiadminaccelerator@agentmail.to">aiadminaccelerator@agentmail.to</a>.</p><p><a href="/terms.html">Terms</a> · <a href="/cancellation.html">Cancellation rights</a> · <a href="/privacy.html">Privacy</a></p></main></body></html>';
    return response(res,200,html,'text/html; charset=utf-8',{'x-robots-tag':'noindex,nofollow'});
   }
-  if(req.method==='GET'&&p==='/api/health')return response(res,200,{ok:true,checkoutEnabled:enabled||linkReady,paymentLinkReady:linkReady,mode:isLive?'live':isTest?'test':'unconfigured',siteStage:isQASite?'qa':'production',supportEmailConfigured:Boolean(contact),sellerDetailsReady,emailTransportReady:mailReady,toolkitDeliveryReady:validToolkit,timestamp:sleep()});
-  if(req.method==='GET'&&p==='/api/config')return response(res,200,{checkoutReady:enabled||linkReady,paymentLinkCheckout:linkReady,sandbox:isQASite,contactEmail:contact,offers:{toolkit:29,audit:149}});
+  if(req.method==='GET'&&p==='/api/health')return response(res,200,{ok:true,checkoutEnabled:enabled||linkReady,paymentLinkReady:linkReady,premiumCheckoutReady:premiumReady,mode:isLive?'live':isTest?'test':'unconfigured',siteStage:isQASite?'qa':'production',supportEmailConfigured:Boolean(contact),sellerDetailsReady,emailTransportReady:mailReady,toolkitDeliveryReady:validToolkit,timestamp:sleep()});
+  if(req.method==='GET'&&p==='/api/config')return response(res,200,{checkoutReady:enabled||linkReady,paymentLinkCheckout:linkReady,premiumCheckoutReady:premiumReady,sandbox:isQASite,contactEmail:contact,offers:{toolkit:29,audit:149,growth:299,sprint:599,transform:999}});
   if(req.method==='POST'&&p==='/api/checkout'){
    if(!enabled&&!linkReady)return response(res,503,{error:'Checkout is not yet open.'});
    if(limit(req))return response(res,429,{error:'Too many requests'});
    const b=await body(req),offer=safe(b.offer,20);
    if(!Object.hasOwn(PRODUCTS,offer)||b.consent!==true)return response(res,400,{error:'Please choose a product and accept the terms.'});
+   if(premiumOffers.includes(offer)&&!premiumReady)return response(res,503,{error:'This service checkout is unavailable. Please email support.'});
    if(linkReady)return response(res,200,{url:paymentLinkUrls[offer]});
    const params={mode:'payment','line_items[0][price]':PRODUCTS[offer].price,'line_items[0][quantity]':'1',success_url:BASE+'/success.html?session_id={CHECKOUT_SESSION_ID}',cancel_url:BASE+'/#pricing','customer_creation':'always','metadata[store]':'ai-admin-accelerator','metadata[offer]':offer,'metadata[consent_acknowledged]':'yes','metadata[consent_timestamp]':sleep()};
    const order=await stripe('POST','/checkout/sessions',params);
