@@ -41,7 +41,7 @@
       btns.forEach(btn=>{btn.textContent='Contact us to order';});
       return;
     }
-    setMessage(cfg.sandbox?'Sandbox checkout only — no real money is charged.':'Secure card checkout is available through Stripe. PayPal is not active yet.');
+    setMessage(cfg.sandbox?'Sandbox checkout only — no real money is charged.':'Secure card checkout is available through Stripe. Prices are in GBP.');
     btns.forEach(btn=>{
       const offer=btn.dataset.checkoutOffer;
       if(!safeOffers.has(offer))return;
