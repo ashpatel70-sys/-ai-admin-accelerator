@@ -152,3 +152,38 @@ test('live crawl configuration advertises an XML sitemap with canonical producti
  assert.ok(xml.includes('<loc>https://ai-admin-accelerator-shop.onrender.com/</loc>'));
  assert.doesNotMatch(xml,/terms\.html|privacy\.html|order-received/);
 });
+
+
+test('search pages: toolkit and written review have useful unique content, canonical URLs and safe indexing',async()=>{
+ const cases=[['/ai-admin-toolkit.html','£29','AI Admin Toolkit'],['/ai-workflow-review.html','£149','AI Workflow Review']];
+ for(const [url,price,title] of cases){
+  const r=await req(url);assert.equal(r.status,200);
+  assert.match(r.headers.get('x-robots-tag'),/index,follow/);
+  const html=await r.text();
+  assert.match(html,/<meta name="robots" content="index,follow">/);
+  assert.ok(html.includes('<link rel="canonical" href="https://ai-admin-accelerator-shop.onrender.com'+url+'">'));
+  assert.ok(html.includes(title));
+  assert.ok(html.includes(price));
+  assert.equal((html.match(/<h1\\b/g)||[]).length,1);
+  const data=html.match(/<script type="application\\/ld\\+json">([\\s\\S]*?)<\\/script>/);
+  assert.ok(data);assert.ok(JSON.parse(data[1])['@type']);
+  assert.doesNotMatch(html,/Example Test Trader|10 Example Street London/);
+ }
+ const home=await (await req('/')).text();
+ assert.match(home,/href="\\/ai-admin-toolkit.html"/);
+ assert.match(home,/href="\\/ai-workflow-review.html"/);
+ assert.equal((home.match(/data-checkout-offer="/g)||[]).length,2);
+});
+test('new searchable landing pages are listed in XML sitemap without exposing private customer routes',async()=>{
+ const sitemap=await req('/sitemap.xml');
+ assert.equal(sitemap.status,200);
+ const xml=await sitemap.text();
+ for(const path of ['/','/ai-admin-toolkit.html','/ai-workflow-review.html']){
+  assert.ok(xml.includes('<loc>https://ai-admin-accelerator-shop.onrender.com'+path+'</loc>'));
+ }
+ assert.equal((xml.match(/<url>/g)||[]).length,3);
+ for(const path of ['/terms.html','/privacy.html','/cancellation.html','/order-received.html']){
+  const r=await req(path);assert.match(r.headers.get('x-robots-tag'),/noindex/);
+  assert.doesNotMatch(xml,new RegExp(path.replaceAll('.','\\.')));
+ }
+});
