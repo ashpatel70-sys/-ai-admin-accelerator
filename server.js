@@ -55,6 +55,9 @@ const deliveredLinkSessions=new Set(),pendingLinkSessions=new Set();
 const SEARCH_LANDING_PAGES=new Set(['/','/ai-admin-toolkit.html','/ai-workflow-review.html']);
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.ico':'image/x-icon','.svg':'image/svg+xml','.xml':'application/xml; charset=utf-8','.txt':'text/plain; charset=utf-8'};
 const hits=new Map();
+const feedbackHits=new Map();
+const FEEDBACK_INTERVAL=10*60*1000;
+function feedbackLimited(req){const key=req.socket.remoteAddress||'unknown',now=Date.now();const recent=(feedbackHits.get(key)||[]).filter(t=>now-t<FEEDBACK_INTERVAL);recent.push(now);feedbackHits.set(key,recent);if(feedbackHits.size>1000)feedbackHits.clear();return recent.length>10;}
 const sleep=()=>new Date().toISOString();
 function response(res,status,data,type='application/json; charset=utf-8',extra={}){
  res.writeHead(status,{'content-type':type,'cache-control':'no-store','x-content-type-options':'nosniff','x-frame-options':'DENY','referrer-policy':'strict-origin-when-cross-origin','permissions-policy':'camera=(), microphone=(), geolocation=()',...extra});
@@ -222,6 +225,24 @@ const server=createServer(async(req,res)=>{
   if(req.method==='GET'&&p==='/order-received.html'){
    const html='<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Thank you | AI Admin Accelerator</title><style>body{font:16px/1.65 system-ui,-apple-system,sans-serif;background:#f4f7fc;color:#172441;padding:16px}main{background:white;max-width:720px;margin:48px auto;padding:30px;border-radius:16px}a{color:#5159d8}</style></head><body><main><p><a href="/">AI Admin Accelerator</a></p><h1>Thank you for your order</h1><p>Your payment is being verified directly with Stripe. We will email your order confirmation and product delivery to the address you used at checkout.</p><h2>AI Admin Toolkit — £29</h2><p>Following verified payment, your downloadable ZIP toolkit is sent as an email attachment. Check your junk folder. If it is not received by the next UK working day, contact support.</p><h2>AI Workflow Review — £149</h2><p>Reply to the order email with your business sector, current workflow, software and goals. Your written review is normally delivered within five UK working days after receipt of a complete brief.</p><h2>Growth Bundle — £299 · Team Productivity Sprint — £599 · Operations Transformation Planning — £999</h2><p>Reply to your payment confirmation email with your business workflow brief and preferred dates. We will contact you to agree the remote engagement timetable. See the Terms for fixed service scopes and your cancellation rights.</p><p>Support, cancellations and refunds: <a href="mailto:aiadminaccelerator@agentmail.to">aiadminaccelerator@agentmail.to</a>.</p><p><a href="/terms.html">Terms</a> · <a href="/cancellation.html">Cancellation rights</a> · <a href="/privacy.html">Privacy</a></p></main></body></html>';
    return response(res,200,html,'text/html; charset=utf-8',{'x-robots-tag':'noindex,nofollow'});
+  }
+  if(req.method==='POST'&&p==='/api/feedback'){
+   if(!agentMailKey||!contact||isQASite)return response(res,503,{error:'Feedback form is temporarily unavailable. Please email support.'});
+   const expectedOrigin=new URL(BASE).origin;
+   const origin=req.headers.origin;
+   if(origin!==expectedOrigin)return response(res,403,{error:'The feedback form must be submitted from our website.'});
+   if(!String(req.headers['content-type']||'').toLowerCase().startsWith('application/json'))return response(res,415,{error:'Please send JSON feedback.'});
+   if(feedbackLimited(req))return response(res,429,{error:'Too many submissions. Please try again later.'});
+   let input;try{input=JSON.parse((await raw(req,4096)).toString('utf8'))}catch{return response(res,400,{error:'Invalid feedback details.'});}
+   if(input&&typeof input.honey==='string'&&input.honey.length)return response(res,200,{ok:true,status:'received'});
+   const name=safe(input?.name,80),email=safe(input?.email,180),comment=safe(input?.comment,1600);
+   const rating=Number(input?.rating),reference=safe(input?.orderReference,90);
+   if(name.length<2||name.length>80||!/^\S+@\S+\.\S+$/.test(email)||comment.length<25||comment.length>1600||!Number.isInteger(rating)||rating<1||rating>5||input?.privacyAcknowledged!==true||input?.publishConsent!==true)
+    return response(res,400,{error:'Please provide a name, valid email, 1–5 rating, at least 25 characters of feedback and both acknowledgements.'});
+   if(/[\r\n]/.test(email)||/[\u0000-\u0008]/.test(comment))return response(res,400,{error:'Invalid feedback details.'});
+   const review='<h2>Customer comment awaiting moderation</h2><p><b>Name:</b> '+escapeHTML(name)+'</p><p><b>Private email (never publish):</b> '+escapeHTML(email)+'</p><p><b>Submitted rating:</b> '+rating+'/5 (website feedback; not Trustpilot)</p><p><b>Optional order reference:</b> '+escapeHTML(reference||'not provided')+'</p><p><b>Customer comment:</b></p><blockquote>'+escapeHTML(comment).replace(/\n/g,'<br>')+'</blockquote><p>Customer acknowledged privacy information and gave explicit permission to publish their comment and name after moderation. Do not publish email or order reference. Verify any claimed purchases and avoid selective review suppression.</p>';
+   await sendMail(contact,'Website feedback awaiting review — '+rating+'/5',review,'site-feedback-'+Date.now());
+   return response(res,202,{ok:true,status:'pending_moderation'});
   }
   if(req.method==='GET'&&p==='/api/health')return response(res,200,{ok:true,checkoutEnabled:enabled||linkReady,paymentLinkReady:linkReady,premiumCheckoutReady:premiumReady,mode:isLive?'live':isTest?'test':'unconfigured',siteStage:isQASite?'qa':'production',supportEmailConfigured:Boolean(contact),sellerDetailsReady,emailTransportReady:mailReady,toolkitDeliveryReady:validToolkit,timestamp:sleep()});
   if(req.method==='GET'&&p==='/api/config')return response(res,200,{checkoutReady:enabled||linkReady,paymentLinkCheckout:linkReady,premiumCheckoutReady:premiumReady,sandbox:isQASite,contactEmail:contact,offers:{toolkit:29,audit:149,growth:299,sprint:599,transform:999}});
