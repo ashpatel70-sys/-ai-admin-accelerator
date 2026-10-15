@@ -17,6 +17,9 @@ const port=36931, secret='whsec_test_simulated', child=spawn(process.execPath,['
  env:{...process.env,PORT:String(port),NODE_ENV:'test',TEST_AGENTMAIL_BASE:'http://127.0.0.1:36932',DEPLOYMENT_STAGE:'production',STRIPE_SECRET_KEY:'',STRIPE_WEBHOOK_SECRET:'',
  STRIPE_PAYMENT_LINK_WEBHOOK_SECRET:secret,STRIPE_PAYMENT_LINK_TOOLKIT:'plink_live_mock_toolkit',
  STRIPE_PAYMENT_LINK_REVIEW:'plink_live_mock_audit',STRIPE_PAYMENT_URL_TOOLKIT:'https://buy.stripe.com/MOCKTOOLKIT',
+ STRIPE_PRICE_GROWTH:'price_mock_growth',STRIPE_PRICE_SPRINT:'price_mock_sprint',STRIPE_PRICE_TRANSFORM:'price_mock_transform',
+ STRIPE_PAYMENT_LINK_GROWTH:'plink_mock_growth',STRIPE_PAYMENT_LINK_SPRINT:'plink_mock_sprint',STRIPE_PAYMENT_LINK_TRANSFORM:'plink_mock_transform',
+ STRIPE_PAYMENT_URL_GROWTH:'https://buy.stripe.com/MOCKGROWTH',STRIPE_PAYMENT_URL_SPRINT:'https://buy.stripe.com/MOCKSPRINT',STRIPE_PAYMENT_URL_TRANSFORM:'https://buy.stripe.com/MOCKTRANSFORM',
  STRIPE_PAYMENT_URL_REVIEW:'https://buy.stripe.com/MOCKAUDIT',AGENTMAIL_API_KEY:'am_mock',
  AGENTMAIL_INBOX:'aiadminaccelerator@agentmail.to',OWNER_EMAIL:'aiadminaccelerator@agentmail.to',
  PUBLIC_CONTACT_EMAIL:'aiadminaccelerator@agentmail.to',PUBLIC_SELLER_LEGAL_NAME:'Example Test Trader',
@@ -49,8 +52,8 @@ async function signedEvent(o,type='checkout.session.completed'){
  return req('/api/payment-link-webhook',{method:'POST',headers:{'stripe-signature':'t='+t+',v1='+sig},body:raw});
 }
 const paidOrder=(offer)=>({
- id:'cs_live_MOCK'+(offer==='toolkit'?'TOOLKIT':'REVIEW'),mode:'payment',payment_status:'paid',livemode:true,currency:'gbp',
- amount_total:offer==='toolkit'?2900:14900,payment_link:offer==='toolkit'?'plink_live_mock_toolkit':'plink_live_mock_audit',
+ id:'cs_live_MOCK'+offer.toUpperCase(),mode:'payment',payment_status:'paid',livemode:true,currency:'gbp',
+ amount_total:{toolkit:2900,audit:14900,growth:29900,sprint:59900,transform:99900}[offer],payment_link:{toolkit:'plink_live_mock_toolkit',audit:'plink_live_mock_audit',growth:'plink_mock_growth',sprint:'plink_mock_sprint',transform:'plink_mock_transform'}[offer],
  metadata:{store:'ai-admin-accelerator',offer,v:'1'},customer_details:{email:'testbuyer@example.org'},
  created:Math.floor(Date.now()/1000)
 });
@@ -136,7 +139,7 @@ test('production homepage exposes accurate Google Search metadata and five trans
  assert.match(html,/£29/);assert.match(html,/£149/);
  assert.match(html,/£299/);assert.match(html,/£599/);assert.match(html,/£999/);
  assert.match(html,/guide price/);
- assert.equal((html.match(/data-checkout-offer="/g)||[]).length,2);
+ assert.equal((html.match(/data-checkout-offer="/g)||[]).length,5);
  assert.doesNotMatch(html,/Example Test Trader|10 Example Street London/);
  const logo=await req('/brand-mark.svg');assert.equal(logo.status,200);
  assert.match(await logo.text(),/<svg/);
@@ -172,7 +175,7 @@ test('search pages: toolkit and written review have useful unique content, canon
  const home=await (await req('/')).text();
  assert.ok(home.includes('href="/ai-admin-toolkit.html"'));
  assert.ok(home.includes('href="/ai-workflow-review.html"'));
- assert.equal((home.match(/data-checkout-offer="/g)||[]).length,2);
+ assert.equal((home.match(/data-checkout-offer="/g)||[]).length,5);
 });
 test('new searchable landing pages are listed in XML sitemap without exposing private customer routes',async()=>{
  const sitemap=await req('/sitemap.xml');
@@ -185,5 +188,34 @@ test('new searchable landing pages are listed in XML sitemap without exposing pr
  for(const path of ['/terms.html','/privacy.html','/cancellation.html','/order-received.html']){
   const r=await req(path);assert.match(r.headers.get('x-robots-tag'),/noindex/);
   assert.doesNotMatch(xml,new RegExp(path.replaceAll('.','\\.')));
+ }
+});
+
+
+test('all five secure checkout routes match each configured Stripe live payment link',async()=>{
+ const cfg=await (await req('/api/config')).json();
+ assert.equal(cfg.premiumCheckoutReady,true);
+ assert.deepEqual(cfg.offers,{toolkit:29,audit:149,growth:299,sprint:599,transform:999});
+ const urls={toolkit:'MOCKTOOLKIT',audit:'MOCKAUDIT',growth:'MOCKGROWTH',sprint:'MOCKSPRINT',transform:'MOCKTRANSFORM'};
+ for(const [offer,slug] of Object.entries(urls)){
+  const r=await req('/api/checkout',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({offer,consent:true})});
+  assert.equal(r.status,200,offer);
+  assert.equal((await r.json()).url,'https://buy.stripe.com/'+slug);
+ }
+});
+test('new premium service payments send correct customer intake and owner notification',async()=>{
+ for(const [offer,price,name] of [['growth','£299.00','Growth Bundle'],['sprint','£599.00','Team Productivity Sprint'],['transform','£999.00','Operations Transformation Planning']]){
+  const r=await signedEvent(paidOrder(offer));assert.equal(r.status,200);
+  assert.equal((await r.json()).result,'fulfilled');
+  const buyer=emails.find(m=>m.to?.[0]==='testbuyer@example.org'&&m.subject.includes(name));
+  assert.ok(buyer,offer);assert.match(buyer.html,/completed|complete|workflow|brief/i);assert.match(buyer.html,/cancellation and statutory rights/i);assert.match(buyer.html,new RegExp(price.replace('.','\\.')));
+  assert.doesNotMatch(buyer.html,/Example Test Trader|10 Example Street London/);
+  assert.ok(emails.some(m=>m.to?.[0]==='aiadminaccelerator@agentmail.to'&&m.subject.includes(name)));
+  const num=emails.length;
+  const retry=await signedEvent(paidOrder(offer));
+  assert.equal((await retry.json()).result,'duplicate');
+  assert.equal(emails.length,num);
+  const invalid=paidOrder(offer);invalid.id='cs_live_WRONGAMOUNT'+offer.toUpperCase();invalid.amount_total=1;
+  assert.equal((await (await signedEvent(invalid)).json()).result,'ignored');
  }
 });
