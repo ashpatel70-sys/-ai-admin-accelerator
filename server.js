@@ -166,7 +166,7 @@ async function servePublic(req,res,pathname){
  if(!file.startsWith(PUBLIC+path.sep))return response(res,403,'Forbidden','text/plain');
  const meta=await stat(file).catch(()=>null);if(!meta?.isFile())return response(res,404,'Not found','text/plain');
  let data=await readFile(file);
- if(['/', '/terms.html','/privacy.html'].includes(pathname)){
+ if(pathname==='/terms.html'){
   const traderDetails=sellerDetailsReady&&!isQASite?
    '<p><strong>Legal seller:</strong> '+escapeHTML(legalSeller)+' (trading as AI Admin Accelerator). <strong>Business address:</strong> '+escapeHTML(legalPostal)+'.</p>':
    '<p>Trading name: AI Admin Accelerator. Seller identity and business address are not yet finalised for paid ordering.</p>';
@@ -199,7 +199,7 @@ async function servePublic(req,res,pathname){
   data=Buffer.from(markup);
  }
  const ext=path.extname(file);
- response(res,200,req.method==='HEAD'?'':data,mime[ext]||'application/octet-stream',{'cache-control':'public,max-age=90','x-robots-tag':!isQASite&&sellerDetailsReady&&pathname==='/'?'all':'noindex,nofollow'});
+ response(res,200,req.method==='HEAD'?'':data,mime[ext]||'application/octet-stream',{'cache-control':pathname==='/terms.html'?'no-store':'public,max-age=90','x-robots-tag':!isQASite&&sellerDetailsReady&&pathname==='/'?'all':'noindex,nofollow'});
 }
 const server=createServer(async(req,res)=>{
  const u=new URL(req.url,BASE),p=u.pathname;
