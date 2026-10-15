@@ -49,7 +49,7 @@ test('unpaid order IDs do not unlock customer download or order intake',async()=
 });
 test('site displays closed checkout until launch criteria met',async()=>{
  const r=await request('/');const t=await r.text();
- assert.match(t,/NOW OPEN FOR ENQUIRIES/);assert.match(t,/Checkout not yet available/);assert.match(t,/mailto:aiadminaccelerator@agentmail\.to/);
+ assert.match(t,/data-checkout-offer="toolkit" disabled/);assert.match(t,/data-checkout-offer="audit" disabled/);assert.match(t,/mailto:aiadminaccelerator@agentmail\.to/);
 });
 test('sensitive server files remain inaccessible via public URL',async()=>{
  for(const path of ['/server.js','/package.json','/tests/site.test.js']){
