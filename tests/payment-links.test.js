@@ -95,3 +95,26 @@ test('private personal information never appears on homepage, privacy or public 
  assert.match(terms.headers.get('x-robots-tag'),/noindex/);
  assert.match(terms.headers.get('cache-control'),/no-store/);
 });
+
+
+test('new storefront shows London service map without a pin, expanded services and safe payment controls',async()=>{
+ const r=await req('/');assert.equal(r.status,200);
+ const html=await r.text();
+ assert.match(html,/Greater London|London service area/);
+ assert.match(html,/www\.openstreetmap\.org\/export\/embed\.html/);
+ assert.match(html,/no personal location pin/i);
+ assert.match(html,/Workflow automation planning/);
+ assert.match(html,/Client onboarding systems/);
+ assert.match(html,/Knowledge bases & SOPs/);
+ assert.match(html,/Customer Email Playbook/);
+ assert.match(html,/Client Onboarding Pack/);
+ assert.match(html,/data-checkout-offer="toolkit"/);
+ assert.match(html,/data-checkout-offer="audit"/);
+ assert.match(html,/PayPal — activation pending/);
+ assert.doesNotMatch(html,/Example Test Trader|10 Example Street London/);
+ const script=await req('/checkout.js');assert.equal(script.status,200);
+ const code=await script.text();
+ assert.match(code,/dataset\.checkoutOffer/);
+ assert.match(code,/api\/checkout/);
+ assert.doesNotMatch(code,/PAYPAL_CLIENT_SECRET|PAYPAL_CLIENT_ID/);
+});
