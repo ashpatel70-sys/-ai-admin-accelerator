@@ -219,3 +219,40 @@ test('new premium service payments send correct customer intake and owner notifi
   assert.equal((await (await signedEvent(invalid)).json()).result,'ignored');
  }
 });
+
+
+test('review area displays no fabricated testimonials or Trustpilot score and serves client script',async()=>{
+ const homepage=await req('/');assert.equal(homepage.status,200);
+ const html=await homepage.text();
+ assert.match(html,/id="reviews"/);assert.match(html,/id="feedback-form"/);
+ assert.match(html,/No verified Trustpilot score is currently available to display/);
+ assert.doesNotMatch(html,/Trustpilot 5\/5|Trustpilot 4\.9|five-star Trustpilot rating/i);
+ assert.match(html,/\/feedback\.js/);
+ const result=await req('/reviews.json');assert.equal(result.status,200);
+ const data=await result.json();assert.deepEqual(data.reviews,[]);
+ const js=await req('/feedback.js');assert.equal(js.status,200);
+ assert.match(await js.text(),/api\/feedback/);
+});
+test('comments require same-origin, correct consent, and are privately emailed for moderation',async()=>{
+ const origin=process.env.PUBLIC_BASE_URL||'http://localhost:'+port;
+ const headers={'content-type':'application/json',origin:origin.replace(/\/$/,'')};
+ const feedback={name:'Test Customer',email:'customer@example.net',rating:3,orderReference:'cs_live_SAMPLE',comment:'Helpful material but I would like clearer instructions for installing the templates.',publishConsent:true,privacyAcknowledged:true,honey:''};
+ const cross=await req('/api/feedback',{method:'POST',headers:{...headers,origin:'https://untrusted.example'},body:JSON.stringify(feedback)});
+ assert.equal(cross.status,403);
+ const without=await req('/api/feedback',{method:'POST',headers,body:JSON.stringify({...feedback,publishConsent:false})});
+ assert.equal(without.status,400);
+ const wrong=await req('/api/feedback',{method:'POST',headers,body:JSON.stringify({...feedback,rating:8})});
+ assert.equal(wrong.status,400);
+ const good=await req('/api/feedback',{method:'POST',headers,body:JSON.stringify({...feedback,comment:'Great content <script>alert("x")</script> and clear help options. More examples would be welcome.'})});
+ assert.equal(good.status,202);
+ assert.equal((await good.json()).status,'pending_moderation');
+ const received=emails.find(x=>x.subject?.includes('Website feedback awaiting review'));
+ assert.ok(received);assert.equal(received.to?.[0],'aiadminaccelerator@agentmail.to');
+ assert.match(received.html,/Great content &lt;script&gt;alert/);
+ assert.doesNotMatch(received.html,/<script>alert/);
+ assert.match(received.html,/Private email \(never publish\)/);
+ const data=await (await req('/reviews.json')).json();
+ assert.deepEqual(data.reviews,[],'Comments cannot become public until intentionally moderated');
+ const notice=await (await req('/privacy.html')).text();
+ assert.match(notice,/Customer comments and ratings/);
+});
