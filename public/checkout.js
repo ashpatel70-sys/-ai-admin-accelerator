@@ -1,55 +1,68 @@
 (() => {
-  const btns=[...document.querySelectorAll('button.disabled[disabled]')];
-  const notice=document.createElement('p');notice.id='payment-readiness';
-  notice.style.cssText='font-size:.85rem;color:#60708c;text-align:center;margin:16px auto;max-width:660px';
-  notice.setAttribute('role','status');
-  notice.textContent='Checkout disabled: private-launch staging preview. No purchases are being accepted.';
-  document.getElementById('pricing')?.querySelector('.wrap')?.appendChild(notice);
+  'use strict';
+  const btns=[...document.querySelectorAll('button[data-checkout-offer]')];
+  const notice=document.getElementById('payment-readiness');
+  const safeOffers=new Set(['toolkit','audit']);
   let selected=null;
   const overlay=document.createElement('div');
-  overlay.hidden=true;overlay.style.cssText='position:fixed;inset:0;background:#142042a8;z-index:999;display:none;align-items:center;justify-content:center;padding:20px';
-  overlay.innerHTML='<div style="background:white;border-radius:18px;padding:28px;width:min(530px,100%);max-height:90vh;overflow:auto;box-shadow:0 15px 70px #171b3e55"><h2 style="margin-top:0">Confirm your purchase</h2><p id="item-description"></p><p style="font-size:.88rem">Read our <a href="/terms.html" target="_blank" rel="noopener" style="text-decoration:underline;color:#434dcf">terms and cancellation policy</a> and <a href="/privacy.html" target="_blank" rel="noopener" style="text-decoration:underline;color:#434dcf">privacy notice</a>.</p><label style="display:flex;gap:12px;align-items:flex-start;line-height:1.5"><input id="purchase-consent" type="checkbox" style="margin-top:6px"><span id="consent-words"></span></label><div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:24px"><button id="pay-confirm" style="background:#5056da;color:white;border:0;padding:13px 20px;border-radius:10px;cursor:pointer;font-weight:bold">Continue to Stripe</button><button id="pay-cancel" style="border:1px solid #ccd3e4;background:white;padding:13px 20px;border-radius:10px;cursor:pointer">Cancel</button></div><p id="pay-error" role="status" style="color:#ad2831"></p></div>';
+  overlay.hidden=true;
+  overlay.setAttribute('role','presentation');
+  overlay.style.cssText='position:fixed;inset:0;background:#0c2837bb;z-index:999;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)';
+  overlay.innerHTML='<div role="dialog" aria-modal="true" aria-labelledby="checkout-modal-heading" style="background:white;color:#172c3b;border-radius:20px;padding:clamp(20px,4vw,35px);width:min(560px,100%);max-height:90vh;overflow:auto;box-shadow:0 20px 72px #00182a60"><p style="font-weight:800;font-size:.72rem;letter-spacing:.13em;color:#00776d">SECURE CHECKOUT</p><h2 id="checkout-modal-heading" style="margin:10px 0 18px;font-size:1.9rem;letter-spacing:-.04em">Confirm your purchase</h2><p id="item-description"></p><p style="font-size:.88rem;color:#526879">Please read the <a href="/terms.html" target="_blank" rel="noopener" style="color:#006d65">Terms of Service</a>, <a href="/cancellation.html" target="_blank" rel="noopener" style="color:#006d65">cancellation information</a> and <a href="/privacy.html" target="_blank" rel="noopener" style="color:#006d65">Privacy Policy</a> before proceeding.</p><label style="display:flex;gap:12px;align-items:flex-start;line-height:1.55;font-size:.91rem"><input id="purchase-consent" type="checkbox" style="margin-top:5px;width:19px;height:19px;flex-shrink:0;accent-color:#007e72"><span id="consent-words"></span></label><div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:25px"><button id="pay-confirm" style="border:0;border-radius:11px;background:#172f3d;color:white;padding:14px 22px;cursor:pointer;font-weight:750">Continue to secure Stripe checkout ↗</button><button id="pay-cancel" style="border:1px solid #bcd3d2;border-radius:11px;background:white;padding:14px 20px;cursor:pointer">Cancel</button></div><p id="pay-error" role="status" style="color:#b52132;font-size:.87rem;margin:14px 0 0"></p></div>';
   document.body.appendChild(overlay);
+  const confirm=document.getElementById('pay-confirm');
+  const consent=document.getElementById('purchase-consent');
   function close(){overlay.hidden=true;overlay.style.display='none';selected=null;}
+  function open(offer){
+    if(!safeOffers.has(offer))return;
+    selected=offer;
+    consent.checked=false;
+    document.getElementById('pay-error').textContent='';
+    document.getElementById('item-description').textContent=offer==='toolkit'?'AI Admin Toolkit — £29 one-time digital download':'AI Workflow Review — £149 one-time personalised written service';
+    document.getElementById('consent-words').textContent=offer==='toolkit'
+      ?'I expressly request immediate digital delivery and acknowledge that the statutory 14-day cancellation right may be lost once supply begins where the legal conditions are met. My rights relating to faulty digital content remain.'
+      :'I have read the terms and expressly request service work to begin after intake, including within the 14-day cancellation period. I understand applicable statutory cancellation charges may apply to work already completed.';
+    overlay.hidden=false;overlay.style.display='flex';consent.focus();
+  }
   document.getElementById('pay-cancel').addEventListener('click',close);
-  overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!overlay.hidden)close()});
-  fetch('/api/config',{cache:'no-store'}).then(r=>r.json()).then(cfg=>{
-   if(cfg.sandbox){
-     const banner=document.createElement('div');
-     banner.setAttribute('role','status');
-     banner.style.cssText='position:relative;z-index:8;background:#ffedbe;color:#452e00;padding:14px 20px;text-align:center;font-weight:850;border-bottom:3px solid #dc9a17;font-size:15px';
-     banner.textContent='STRIPE SANDBOX / QA TESTING ONLY — no real charges. This is not the live customer shop.';
-     document.body.prepend(banner);
-     notice.textContent=cfg.checkoutReady?'SANDBOX CHECKOUT: Stripe test cards only; no real payments.':'QA SANDBOX: test checkout remains closed until the integration and delivery are verified.';
-   }
-   if(!cfg.checkoutReady){if(!cfg.sandbox)notice.textContent='We are open for enquiries today. Email us using either offer button above; secure checkout will follow.';return;}
-   notice.textContent=cfg.sandbox?'Stripe sandbox test checkout is available. No real charges will occur.': 'Secure Stripe checkout is available. Prices are in GBP.';
-   btns.forEach((btn,i)=>{
-    btn.disabled=false;btn.removeAttribute('aria-disabled');btn.style.cssText='background:#5056da;color:white;cursor:pointer';
-    btn.textContent=i===0?'Buy toolkit — £29':'Book workflow review — £149';
-    btn.addEventListener('click',()=>{
-      selected=i===0?'toolkit':'audit';
-      document.getElementById('purchase-consent').checked=false;
-      document.getElementById('pay-error').textContent='';
-      document.getElementById('item-description').textContent=selected==='toolkit'?'AI Admin Toolkit — £29 one-time download':'AI Workflow Review — £149 written personalised service';
-      document.getElementById('consent-words').textContent=selected==='toolkit'
-       ?'I expressly request immediate delivery of digital content and acknowledge that I lose the 14-day cancellation right once digital supply begins, where the statutory conditions are met. My rights regarding faulty content remain.'
-       :'I have read the terms and expressly request the service to start after intake, including within 14 days. I understand applicable cancellation charges may be due for work already completed.';
-      overlay.hidden=false;overlay.style.display='flex';
+  overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!overlay.hidden)close();});
+  const setMessage=text=>{if(notice)notice.textContent=text;};
+  fetch('/api/config',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Config error');return r.json();}).then(cfg=>{
+    if(cfg.sandbox){
+      const banner=document.createElement('div');
+      banner.setAttribute('role','status');
+      banner.style.cssText='position:relative;z-index:99;background:#ffedbe;color:#452e00;padding:14px 20px;text-align:center;font-weight:850;border-bottom:3px solid #dc9a17;font-size:15px';
+      banner.textContent='QA TESTING ONLY — no real charges. This is not the live customer storefront.';
+      document.body.prepend(banner);
+    }
+    if(!cfg.checkoutReady){
+      setMessage(cfg.sandbox?'QA sandbox: checkout disabled pending integration checks.':'Checkout is temporarily unavailable. Please email our support team to enquire.');
+      btns.forEach(btn=>{btn.textContent='Contact us to order';});
+      return;
+    }
+    setMessage(cfg.sandbox?'Sandbox checkout only — no real money is charged.':'Secure card checkout is available through Stripe. PayPal is not active yet.');
+    btns.forEach(btn=>{
+      const offer=btn.dataset.checkoutOffer;
+      if(!safeOffers.has(offer))return;
+      btn.disabled=false;btn.removeAttribute('aria-disabled');
+      btn.textContent=offer==='toolkit'?'Buy toolkit — £29 ↗':'Book workflow review — £149 ↗';
+      btn.addEventListener('click',()=>open(offer));
     });
-   });
-  }).catch(()=>{notice.textContent='Unable to verify checkout availability; purchasing remains disabled.'});
-  document.getElementById('pay-confirm').addEventListener('click',async e=>{
-   const error=document.getElementById('pay-error');
-   if(!document.getElementById('purchase-consent').checked){error.textContent='Please tick the consent checkbox first.';return;}
-   if(!selected)return;
-   const button=e.currentTarget;button.disabled=true;button.textContent='Opening secure checkout…';
-   try{
-     const r=await fetch('/api/checkout',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({offer:selected,consent:true})});
-     const data=await r.json();
-     if(!r.ok||!data.url)throw new Error(data.error||'Checkout unavailable');
-     location.href=data.url;
-   }catch(e){error.textContent=e.message;button.disabled=false;button.textContent='Continue to Stripe'}
+  }).catch(()=>{setMessage('Unable to verify payment status. Purchasing remains disabled for safety.');btns.forEach(btn=>{btn.textContent='Checkout currently unavailable';});});
+  confirm.addEventListener('click',async()=>{
+    const error=document.getElementById('pay-error');
+    if(!consent.checked){error.textContent='Please tick the consent checkbox before continuing.';return;}
+    if(!selected)return;
+    confirm.disabled=true;confirm.textContent='Opening secure checkout…';
+    try{
+      const r=await fetch('/api/checkout',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({offer:selected,consent:true})});
+      const data=await r.json();
+      if(!r.ok||typeof data.url!=='string'||!/^https:\/\/(buy\.stripe\.com|checkout\.stripe\.com)\//.test(data.url))throw new Error(data.error||'Checkout is unavailable');
+      window.location.assign(data.url);
+    }catch(e){
+      error.textContent=e.message||'Please try again or contact support.';
+      confirm.disabled=false;confirm.textContent='Continue to secure Stripe checkout ↗';
+    }
   });
 })();
