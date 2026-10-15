@@ -47,7 +47,7 @@ const linkReady=Boolean(!isQASite&&sellerDetailsReady&&agentMailKey&&validToolki
  /^https:\/\/buy\.stripe\.com\/[A-Za-z0-9]+$/.test(paymentLinkUrls.toolkit)&&/^https:\/\/buy\.stripe\.com\/[A-Za-z0-9]+$/.test(paymentLinkUrls.audit)&&
  process.env.PAYMENT_LINK_SALES_ENABLED==='true'&&process.env.LEGAL_READY==='true'&&process.env.FULFILMENT_TESTED==='true');
 const deliveredLinkSessions=new Set(),pendingLinkSessions=new Set();
-const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.ico':'image/x-icon','.svg':'image/svg+xml','.txt':'text/plain; charset=utf-8'};
+const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.ico':'image/x-icon','.svg':'image/svg+xml','.xml':'application/xml; charset=utf-8','.txt':'text/plain; charset=utf-8'};
 const hits=new Map();
 const sleep=()=>new Date().toISOString();
 function response(res,status,data,type='application/json; charset=utf-8',extra={}){
@@ -192,7 +192,12 @@ async function servePublic(req,res,pathname){
 const server=createServer(async(req,res)=>{
  const u=new URL(req.url,BASE),p=u.pathname;
  try{
-  if(req.method==='GET'&&p==='/robots.txt')return response(res,200,(isQASite||!sellerDetailsReady)?'User-agent: *\nDisallow: /\n':'User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /success.html\n','text/plain; charset=utf-8');
+  if(req.method==='GET'&&p==='/robots.txt')return response(res,200,(isQASite||!sellerDetailsReady)?'User-agent: *\nDisallow: /\\n':'User-agent: *\\nAllow: /\nDisallow: /api/\nDisallow: /success.html\nDisallow: /order-received.html\\nSitemap: '+BASE+'/sitemap.xml\\n','text/plain; charset=utf-8');
+  if(req.method==='GET'&&p==='/sitemap.xml'){
+   if(isQASite||!sellerDetailsReady)return response(res,404,'Sitemap is not available for this environment','text/plain; charset=utf-8');
+   const xml='<?xml version="1.0" encoding="UTF-8"?>\\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>'+escapeHTML(BASE)+'/</loc></url></urlset>';
+   return response(res,200,xml,'application/xml; charset=utf-8',{'cache-control':'public,max-age=3600'});
+  }
   if(req.method==='GET'&&p==='/order-received.html'){
    const html='<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Thank you | AI Admin Accelerator</title><style>body{font:16px/1.65 system-ui,-apple-system,sans-serif;background:#f4f7fc;color:#172441;padding:16px}main{background:white;max-width:720px;margin:48px auto;padding:30px;border-radius:16px}a{color:#5159d8}</style></head><body><main><p><a href="/">AI Admin Accelerator</a></p><h1>Thank you for your order</h1><p>Your payment is being verified directly with Stripe. We will email your order confirmation and product delivery to the address you used at checkout.</p><h2>AI Admin Toolkit — £29</h2><p>Following verified payment, your downloadable ZIP toolkit is sent as an email attachment. Check your junk folder. If it is not received by the next UK working day, contact support.</p><h2>AI Workflow Review — £149</h2><p>Reply to the order email with your business sector, current workflow, software and goals. Your written review is normally delivered within five UK working days after receipt of a complete brief.</p><p>Support, cancellations and refunds: <a href="mailto:aiadminaccelerator@agentmail.to">aiadminaccelerator@agentmail.to</a>.</p><p><a href="/terms.html">Terms</a> · <a href="/cancellation.html">Cancellation rights</a> · <a href="/privacy.html">Privacy</a></p></main></body></html>';
    return response(res,200,html,'text/html; charset=utf-8',{'x-robots-tag':'noindex,nofollow'});
