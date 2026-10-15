@@ -60,7 +60,7 @@ test('toolkit: signed paid event delivers zipped attachment and owner email, dup
  assert.ok(buyer);assert.equal(buyer.attachments?.length,1);
  assert.equal(buyer.attachments[0].filename,'AI_Admin_Accelerator_Toolkit.zip');
  assert.equal(Buffer.from(buyer.attachments[0].content,'base64').subarray(0,2).toString(),'PK');
- assert.match(buyer.html,/Example Test Trader/);assert.match(buyer.html,/£29.00/);
+ assert.doesNotMatch(buyer.html,/Example Test Trader|10 Example Street London/);assert.match(buyer.html,/AI Admin Accelerator/);assert.match(buyer.html,/£29.00/);
  assert.ok(emails.some(m=>m.to?.[0]==='aiadminaccelerator@agentmail.to'&&m.subject.includes('paid')));
  const n=emails.length,dup=await signedEvent(paidOrder('toolkit'));
  assert.equal((await dup.json()).result,'duplicate');assert.equal(emails.length,n);
@@ -68,7 +68,7 @@ test('toolkit: signed paid event delivers zipped attachment and owner email, dup
 test('review: signed paid event emails instructions to customer',async()=>{
  const r=await signedEvent(paidOrder('audit'));assert.equal(r.status,200);assert.equal((await r.json()).result,'fulfilled');
  const m=emails.find(x=>x.to?.[0]==='testbuyer@example.org'&&x.subject.includes('Workflow Review'));
- assert.ok(m);assert.match(m.html,/five UK working days/);
+ assert.ok(m);assert.match(m.html,/five UK working days/);assert.doesNotMatch(m.html,/Example Test Trader|10 Example Street London/);
 });
 test('unpaid, wrong link and wrong amount are rejected without delivery',async()=>{
  const n=emails.length,o=paidOrder('toolkit');o.id='cs_live_UNPAID';o.payment_status='unpaid';
@@ -84,15 +84,14 @@ test('customer return page provides fulfilment and refund instructions',async()=
  const t=await r.text();assert.match(t,/emailed|email attachment/);assert.match(t,/Cancellation rights/);
 });
 
-test('legal seller personal details are kept off storefront and privacy page, but remain accessible in pre-sale terms',async()=>{
+test('private personal information never appears on homepage, privacy or public terms',async()=>{
  const homepage=await req('/');assert.equal(homepage.status,200);
  const home=await homepage.text();assert.doesNotMatch(home,/Example Test Trader|10 Example Street London/);
  const privacy=await req('/privacy.html');assert.equal(privacy.status,200);
  const notice=await privacy.text();assert.doesNotMatch(notice,/Example Test Trader|10 Example Street London/);
  assert.match(notice,/Terms of Service/);
  const terms=await req('/terms.html');assert.equal(terms.status,200);
- const disclosures=await terms.text();assert.match(disclosures,/Example Test Trader/);
- assert.match(disclosures,/10 Example Street London/);
+ const disclosures=await terms.text();assert.doesNotMatch(disclosures,/Example Test Trader|10 Example Street London/);assert.match(disclosures,/AI Admin Accelerator/);
  assert.match(terms.headers.get('x-robots-tag'),/noindex/);
  assert.match(terms.headers.get('cache-control'),/no-store/);
 });
