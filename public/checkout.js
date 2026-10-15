@@ -2,7 +2,10 @@
   'use strict';
   const btns=[...document.querySelectorAll('button[data-checkout-offer]')];
   const notice=document.getElementById('payment-readiness');
-  const safeOffers=new Set(['toolkit','audit']);
+  const safeOffers=new Set(['toolkit','audit','growth','sprint','transform']);
+  const labels={toolkit:'AI Admin Toolkit — £29 one-time digital download',audit:'AI Workflow Review — £149 one-time personalised written service',growth:'Growth Bundle — £299 one-time remote service',sprint:'Team Productivity Sprint — £599 one-time remote service',transform:'Operations Transformation Planning — £999 one-time remote service'};
+  const ctas={toolkit:'Buy toolkit — £29 ↗',audit:'Book workflow review — £149 ↗',growth:'Book Growth Bundle — £299 ↗',sprint:'Book Team Sprint — £599 ↗',transform:'Book planning package — £999 ↗'};
+  const premium=new Set(['growth','sprint','transform']);
   let selected=null;
   const overlay=document.createElement('div');
   overlay.hidden=true;
@@ -18,10 +21,10 @@
     selected=offer;
     consent.checked=false;
     document.getElementById('pay-error').textContent='';
-    document.getElementById('item-description').textContent=offer==='toolkit'?'AI Admin Toolkit — £29 one-time digital download':'AI Workflow Review — £149 one-time personalised written service';
+    document.getElementById('item-description').textContent=labels[offer];
     document.getElementById('consent-words').textContent=offer==='toolkit'
       ?'I expressly request immediate digital delivery and acknowledge that the statutory 14-day cancellation right may be lost once supply begins where the legal conditions are met. My rights relating to faulty digital content remain.'
-      :'I have read the terms and expressly request service work to begin after intake, including within the 14-day cancellation period. I understand applicable statutory cancellation charges may apply to work already completed.';
+      :'I have read the package scope, terms and cancellation information. I expressly request service work to begin after my completed intake, including within the 14-day cancellation period, and understand proportionate statutory cancellation charges may apply for work started at my request.';
     overlay.hidden=false;overlay.style.display='flex';consent.focus();
   }
   document.getElementById('pay-cancel').addEventListener('click',close);
@@ -41,12 +44,13 @@
       btns.forEach(btn=>{btn.textContent='Contact us to order';});
       return;
     }
-    setMessage(cfg.sandbox?'Sandbox checkout only — no real money is charged.':'Secure card checkout is available through Stripe. Prices are in GBP.');
+    setMessage(cfg.sandbox?'Sandbox checkout only — no real money is charged.':(cfg.premiumCheckoutReady?'All five one-time offers accept secure Stripe card payments. Prices are in GBP.':'The £29 toolkit and £149 review accept secure card payments. Other packages are currently enquiry-only.'));
     btns.forEach(btn=>{
       const offer=btn.dataset.checkoutOffer;
       if(!safeOffers.has(offer))return;
+      if(premium.has(offer)&&!cfg.premiumCheckoutReady){btn.textContent='Enquire about availability';return;}
       btn.disabled=false;btn.removeAttribute('aria-disabled');
-      btn.textContent=offer==='toolkit'?'Buy toolkit — £29 ↗':'Book workflow review — £149 ↗';
+      btn.textContent=ctas[offer];
       btn.addEventListener('click',()=>open(offer));
     });
   }).catch(()=>{setMessage('Unable to verify payment status. Purchasing remains disabled for safety.');btns.forEach(btn=>{btn.textContent='Checkout currently unavailable';});});
