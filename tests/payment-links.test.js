@@ -17,8 +17,8 @@ const port=36931, secret='whsec_test_simulated', child=spawn(process.execPath,['
  env:{...process.env,PORT:String(port),NODE_ENV:'test',TEST_AGENTMAIL_BASE:'http://127.0.0.1:36932',DEPLOYMENT_STAGE:'production',STRIPE_SECRET_KEY:'',STRIPE_WEBHOOK_SECRET:'',
  STRIPE_PAYMENT_LINK_WEBHOOK_SECRET:secret,STRIPE_PAYMENT_LINK_TOOLKIT:'plink_live_mock_toolkit',
  STRIPE_PAYMENT_LINK_REVIEW:'plink_live_mock_audit',STRIPE_PAYMENT_URL_TOOLKIT:'https://buy.stripe.com/MOCKTOOLKIT',
- STRIPE_PRICE_GROWTH:'price_mock_growth',STRIPE_PRICE_SPRINT:'price_mock_sprint',STRIPE_PRICE_TRANSFORM:'price_mock_transform',
- STRIPE_PAYMENT_LINK_GROWTH:'plink_mock_growth',STRIPE_PAYMENT_LINK_SPRINT:'plink_mock_sprint',STRIPE_PAYMENT_LINK_TRANSFORM:'plink_mock_transform',
+ STRIPE_PRICE_GROWTH:'price_MOCKGROWTH',STRIPE_PRICE_SPRINT:'price_MOCKSPRINT',STRIPE_PRICE_TRANSFORM:'price_MOCKTRANSFORM',
+ STRIPE_PAYMENT_LINK_GROWTH:'plink_MOCKGROWTH',STRIPE_PAYMENT_LINK_SPRINT:'plink_MOCKSPRINT',STRIPE_PAYMENT_LINK_TRANSFORM:'plink_MOCKTRANSFORM',
  STRIPE_PAYMENT_URL_GROWTH:'https://buy.stripe.com/MOCKGROWTH',STRIPE_PAYMENT_URL_SPRINT:'https://buy.stripe.com/MOCKSPRINT',STRIPE_PAYMENT_URL_TRANSFORM:'https://buy.stripe.com/MOCKTRANSFORM',
  STRIPE_PAYMENT_URL_REVIEW:'https://buy.stripe.com/MOCKAUDIT',AGENTMAIL_API_KEY:'am_mock',
  AGENTMAIL_INBOX:'aiadminaccelerator@agentmail.to',OWNER_EMAIL:'aiadminaccelerator@agentmail.to',
@@ -53,7 +53,7 @@ async function signedEvent(o,type='checkout.session.completed'){
 }
 const paidOrder=(offer)=>({
  id:'cs_live_MOCK'+offer.toUpperCase(),mode:'payment',payment_status:'paid',livemode:true,currency:'gbp',
- amount_total:{toolkit:2900,audit:14900,growth:29900,sprint:59900,transform:99900}[offer],payment_link:{toolkit:'plink_live_mock_toolkit',audit:'plink_live_mock_audit',growth:'plink_mock_growth',sprint:'plink_mock_sprint',transform:'plink_mock_transform'}[offer],
+ amount_total:{toolkit:2900,audit:14900,growth:29900,sprint:59900,transform:99900}[offer],payment_link:{toolkit:'plink_live_mock_toolkit',audit:'plink_live_mock_audit',growth:'plink_MOCKGROWTH',sprint:'plink_MOCKSPRINT',transform:'plink_MOCKTRANSFORM'}[offer],
  metadata:{store:'ai-admin-accelerator',offer,v:'1'},customer_details:{email:'testbuyer@example.org'},
  created:Math.floor(Date.now()/1000)
 });
@@ -138,7 +138,7 @@ test('production homepage exposes accurate Google Search metadata and five trans
  assert.ok(info['@graph'].some(x=>x['@type']==='Product'&&x.offers?.price==='29.00'));
  assert.match(html,/£29/);assert.match(html,/£149/);
  assert.match(html,/£299/);assert.match(html,/£599/);assert.match(html,/£999/);
- assert.match(html,/guide price/);
+ assert.match(html,/fixed one-time payments|one-off/i);
  assert.equal((html.match(/data-checkout-offer="/g)||[]).length,5);
  assert.doesNotMatch(html,/Example Test Trader|10 Example Street London/);
  const logo=await req('/brand-mark.svg');assert.equal(logo.status,200);
