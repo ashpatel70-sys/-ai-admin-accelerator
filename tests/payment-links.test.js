@@ -127,7 +127,7 @@ test('production homepage exposes accurate Google Search metadata and five trans
  assert.match(html,/<meta name="robots" content="index,follow">/);
  assert.match(html,/property="og:title"/);
  assert.match(html,/name="twitter:card"/);
- assert.equal((html.match(/<h1\b/g)||[]).length,1);
+  assert.equal(html.split('<h1').length-1,1);
  const markup=html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
  assert.ok(markup,'Structured data must be rendered server-side');
  const info=JSON.parse(markup[1]);
@@ -164,14 +164,14 @@ test('search pages: toolkit and written review have useful unique content, canon
   assert.ok(html.includes('<link rel="canonical" href="https://ai-admin-accelerator-shop.onrender.com'+url+'">'));
   assert.ok(html.includes(title));
   assert.ok(html.includes(price));
-  assert.equal((html.match(/<h1\\b/g)||[]).length,1);
-  const data=html.match(/<script type="application\\/ld\\+json">([\\s\\S]*?)<\\/script>/);
-  assert.ok(data);assert.ok(JSON.parse(data[1])['@type']);
+  assert.equal(html.split('<h1').length-1,1);
+  const marker='<script type="application/ld+json">'; const begin=html.indexOf(marker); const end=html.indexOf('</script>',begin);
+  assert.ok(begin>=0&&end>begin);assert.ok(JSON.parse(html.slice(begin+marker.length,end))['@type']);
   assert.doesNotMatch(html,/Example Test Trader|10 Example Street London/);
  }
  const home=await (await req('/')).text();
- assert.match(home,/href="\\/ai-admin-toolkit.html"/);
- assert.match(home,/href="\\/ai-workflow-review.html"/);
+ assert.ok(home.includes('href="/ai-admin-toolkit.html"'));
+ assert.ok(home.includes('href="/ai-workflow-review.html"'));
  assert.equal((home.match(/data-checkout-offer="/g)||[]).length,2);
 });
 test('new searchable landing pages are listed in XML sitemap without exposing private customer routes',async()=>{
