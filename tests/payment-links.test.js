@@ -149,6 +149,6 @@ test('live crawl configuration advertises an XML sitemap with canonical producti
  const b=await req('/sitemap.xml');assert.equal(b.status,200);
  assert.match(b.headers.get('content-type'),/application\/xml/);
  const xml=await b.text();assert.match(xml,/<urlset/);
- assert.match(xml,/<loc>https:\/\/ai-admin-accelerator-shop\.onrender\.com\/</loc>/);
+ assert.ok(xml.includes('<loc>https://ai-admin-accelerator-shop.onrender.com/</loc>'));
  assert.doesNotMatch(xml,/terms\.html|privacy\.html|order-received/);
 });
