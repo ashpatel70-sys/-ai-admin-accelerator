@@ -82,13 +82,59 @@ footer{background:#0f1c33}footer .brand{color:#fff}footer p{color:#abbdd2}footer
 @media(max-width:735px){.nav{min-height:73px}.nav-links a:not(.nav-action){display:none}.brand{font-size:.98rem}.hero{padding:62px 0}.hero h1{font-size:clamp(2.7rem,9vw,4.4rem)}.features-section{padding:65px 0!important}.feature-layout{grid-template-columns:1fr;gap:35px}.benefit-grid{grid-template-columns:repeat(2,1fr)}.trust-band-inner{grid-template-columns:repeat(2,1fr);row-gap:14px}.trust-band-inner>div:nth-child(2){border-right:0}.pricing-five{grid-template-columns:repeat(2,minmax(0,1fr))}.pricing-security{margin-top:12px}.section-header.split{align-items:start}.content-section{padding:66px 0}.map-copy{padding:30px}.map-box{min-height:300px}.map-box iframe{min-height:300px}}
 @media(max-width:530px){.wrap{width:calc(100% - 30px)}.brand{font-size:.82rem;gap:5px}.brand img{width:36px;height:36px}.nav-action{font-size:.71rem!important;padding:10px 12px!important}.hero h1{font-size:2.65rem}.hero-copy>p{font-size:1rem}.hero-actions{display:flex;flex-direction:column}.hero-actions .btn{width:100%}.showcase-scene{padding:6px 0}.preview-body{grid-template-columns:82px 1fr;min-height:315px}.preview-sidebar{padding:13px 4px}.preview-sidebar span{font-size:.52rem;padding:8px 3px}.preview-sidebar strong{font-size:.5rem}.preview-main{padding:18px 10px}.preview-main h2{font-size:1.22rem}.preview-tiles{gap:4px}.preview-tiles>div{padding:8px 5px;min-height:86px}.preview-tiles b{font-size:.52rem}.preview-tiles small{font-size:.49rem}.preview-top{padding:10px}.preview-top span{font-size:.49rem}.preview-caption{font-size:.52rem}.trust-band-inner{grid-template-columns:repeat(2,1fr)}.trust-band b{width:31px;height:31px}.trust-band span{font-size:.66rem}.benefit-grid{grid-template-columns:1fr}.pricing-five{grid-template-columns:1fr}.pricing-five .product-card{padding:25px}.pricing-five .product-card h3{font-size:1.18rem}.pricing-five .product-card>p:not(.help){font-size:.89rem}.pricing-five .price{font-size:3rem}.steps-four{grid-template-columns:1fr}.pricing-security{white-space:normal}.product-preview{border-radius:14px}.contact-section h2{font-size:2rem}}
 
+
+/* Original first-party customer feedback design: no third-party stars or implied Trustpilot rating */
+.feedback-section{background:linear-gradient(180deg,#fff,#f8faff);border-top:1px solid #e9edf6}
+.feedback-section .section-header.split{align-items:end}
+.review-header-aside{border-left:3px solid #a4bdf2;padding:13px 22px;max-width:345px;display:flex;flex-direction:column;gap:5px}
+.review-header-aside .review-kicker{font-size:.69rem;color:#4b71d2;letter-spacing:.13em;text-transform:uppercase;font-weight:800}
+.review-header-aside strong{font-size:1.11rem;letter-spacing:-.04em}
+.review-header-aside small{color:#667792;line-height:1.5}
+.review-layout{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.feedback-left{display:grid;gap:20px}
+.review-panel,.feedback-form-panel,.independent-panel{background:#fff;border:1px solid #e1e9f4;border-radius:21px;padding:clamp(22px,2.8vw,35px);box-shadow:0 12px 32px #1e36590b}
+.review-panel-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.review-panel h3,.feedback-form-panel h3,.independent-panel h3{font-size:1.4rem;letter-spacing:-.05em;margin:0 0 10px}
+.review-panel-heading span{color:#647b9c;font-size:.73rem;font-weight:650}
+.feedback-empty{background:#f4f7fd;border:1px dashed #d7e2f4;border-radius:14px;padding:26px 20px;margin:17px 0 0!important;font-size:.88rem;line-height:1.7}
+.review-entry{padding:18px 0;border-bottom:1px solid #e9eef7}
+.review-entry:last-child{border-bottom:0}
+.review-entry p{font-size:.89rem;white-space:pre-wrap;margin:10px 0}
+.review-entry small{color:#8a97aa;font-size:.73rem}
+.review-meta{display:flex;align-items:center;justify-content:space-between;gap:15px}
+.review-meta strong{font-size:.89rem}
+.customer-stars{color:#e7a22d;font-size:1rem;letter-spacing:.1em}
+.independent-panel{display:flex;gap:16px;align-items:start;background:linear-gradient(120deg,#f9fbff,#ecf3ff)}
+.independent-icon{display:grid;place-items:center;min-width:46px;height:46px;border-radius:14px;background:#e0eafe;color:#316bd5;font-size:1.5rem}
+.independent-panel h3{margin:9px 0}.independent-panel p{font-size:.84rem;line-height:1.7;margin:0 0 14px}
+.independent-panel a{font-size:.8rem;color:#356dd9;font-weight:720}
+.form-intro p{font-size:.87rem;margin:0 0 20px}
+.feedback-form{display:grid;gap:17px}
+.feedback-form .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.feedback-form label{display:flex;flex-direction:column;gap:7px;font-size:.77rem;font-weight:700;color:#31445e}
+.feedback-form input:not([type=checkbox]),.feedback-form textarea,.feedback-form select{width:100%;min-width:0;max-width:100%;border:1px solid #d4deed;border-radius:11px;background:#fbfcff;padding:12px 13px;font:inherit;color:#1b2d47;font-weight:460;outline-offset:2px;box-shadow:none}
+.feedback-form textarea{resize:vertical;min-height:120px}
+.feedback-form input:focus,.feedback-form textarea:focus,.feedback-form select:focus{outline:2px solid #4d7bea;border-color:#4d7bea}
+.feedback-form .optional{font-weight:500;color:#8896a7}
+.feedback-form .consent-row{flex-direction:row;align-items:flex-start;gap:10px;font-size:.73rem;font-weight:490;line-height:1.55;color:#52627b}
+.feedback-form .consent-row input{margin:3px 0 0;flex:0 0 auto;width:18px;height:18px;accent-color:#356fe5}
+.feedback-form .consent-row a{font-weight:700;color:#3868d0}
+.form-honey{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.feedback-form .feedback-submit{width:100%;border:0;cursor:pointer}
+.feedback-form .feedback-submit:disabled{opacity:.6;cursor:wait}
+.feedback-status{font-size:.78rem;font-weight:650;margin:0}
+.feedback-status.success{color:#1d7758}
+.feedback-footnote{font-size:.72rem!important;line-height:1.6;margin:0!important;color:#708094!important}
+@media(max-width:930px){.review-layout{grid-template-columns:1fr}.review-header-aside{display:none}}
+@media(max-width:550px){.feedback-form .form-grid{grid-template-columns:1fr}.review-panel,.feedback-form-panel,.independent-panel{padding:21px}.review-header-aside{display:none}.independent-panel{flex-direction:column}}
+
 </style>
 </head>
 <body>
 
 <div class="nav-wrap"><nav class="wrap nav" aria-label="Main navigation">
 <a href="/" class="brand" aria-label="AI Admin Accelerator homepage"><img class="brand-symbol" src="/brand-mark.svg" width="43" height="43" alt=""><span>AI Admin <i>Accelerator</i></span></a>
-<div class="nav-links"><a href="#features">What’s included</a><a href="#solutions">Services</a><a href="#products">Pricing</a><a href="#location">London</a><a href="#faq">FAQs</a><a href="#products" class="nav-action">Get started →</a></div>
+<div class="nav-links"><a href="#features">What’s included</a><a href="#solutions">Services</a><a href="#products">Pricing</a><a href="#location">London</a><a href="#reviews">Reviews</a><a href="#faq">FAQs</a><a href="#products" class="nav-action">Get started →</a></div>
 </nav></div>
 <main>
 <section class="hero" aria-labelledby="hero-title"><div class="wrap hero-grid"><div class="hero-copy">
@@ -145,6 +191,26 @@ footer{background:#0f1c33}footer .brand{color:#fff}footer p{color:#abbdd2}footer
 <section id="location" class="content-section"><div class="wrap"><div class="map-layout"><div class="map-copy"><span class="eyebrow">Where we work</span><h2>London roots.<br>Digital reach.</h2><p class="location">⌖ London, United Kingdom</p><p>AI Admin Accelerator is a London-based, remote-first business. We support customers digitally, so there is no need to visit an office to explore our products or request a workflow review.</p><a class="btn btn-outline" href="mailto:aiadminaccelerator@agentmail.to?subject=London%20Business%20Enquiry">Contact our team ↗</a><p class="privacy">Map shows the wider London area only. It is not a street address, registered office or customer-visit location.</p></div>
 <div class="map-box"><iframe title="Map of Greater London — general service area only" src="https://www.openstreetmap.org/export/embed.html?bbox=-0.50%2C51.34%2C0.28%2C51.67&amp;layer=mapnik" loading="lazy" referrerpolicy="no-referrer" aria-label="London service area, no street address or individual location shown"></iframe><span class="map-label">General London area • no personal location pin</span></div>
 </div></div></section>
+<section id="reviews" class="content-section feedback-section" aria-labelledby="review-title"><div class="wrap">
+<div class="section-header split"><div><span class="eyebrow">Customer feedback</span><h2 id="review-title">Your experience matters.</h2><p>We welcome honest feedback from everyone who has used our products or services — positive or negative. All public comments are reviewed to protect customer privacy and reduce spam.</p></div><div class="review-header-aside"><span class="review-kicker">Built on transparency</span><strong>Real customer comments only.</strong><small>No purchased testimonials, invented scores or altered customer quotes.</small></div></div>
+<div class="review-layout">
+<div class="feedback-left">
+  <article class="review-panel"><div class="review-panel-heading"><h3>Customer comments</h3><span id="comment-count" aria-live="polite">Loading approved comments…</span></div><div id="published-comments" aria-live="polite"><p class="feedback-empty">Loading customer comments…</p></div></article>
+  <article class="independent-panel" aria-labelledby="independent-title"><div class="independent-icon" aria-hidden="true">↗</div><div><span class="eyebrow">Independent reviews</span><h3 id="independent-title">Trustpilot rating</h3><p><strong>No verified Trustpilot score is currently available to display.</strong> We will only show an authentic rating and review count once our business profile is confirmed and an authorised Trustpilot widget is connected.</p><a href="https://uk.business.trustpilot.com/" target="_blank" rel="noopener noreferrer">About Trustpilot Business ↗</a></div></article>
+</div>
+<div class="feedback-form-panel"><div class="form-intro"><span class="eyebrow">Share your feedback</span><h3>Leave a customer comment.</h3><p>Tell us what worked and what could improve. We review all ratings fairly. Your email and order reference are never displayed publicly.</p></div>
+<form id="feedback-form" method="post" action="/api/feedback" class="feedback-form">
+<div class="form-grid"><label>Display name <input type="text" name="name" maxlength="80" minlength="2" autocomplete="name" placeholder="Name to show with your comment" required></label><label>Your email (private) <input type="email" name="email" maxlength="180" autocomplete="email" placeholder="you@example.com" required></label></div>
+<div class="form-grid"><label>Your rating <select name="rating" required><option value="" selected disabled>Choose a rating</option><option value="5">5 / 5 — Excellent</option><option value="4">4 / 5 — Good</option><option value="3">3 / 5 — Average</option><option value="2">2 / 5 — Poor</option><option value="1">1 / 5 — Very poor</option></select></label><label>Order reference <span class="optional">(optional, private)</span><input type="text" name="orderReference" maxlength="90" placeholder="Stripe order reference, if available"></label></div>
+<label>Your comment <textarea name="comment" minlength="25" maxlength="1600" rows="5" placeholder="How was your experience? What could we improve?" required></textarea></label>
+<div class="form-honey" aria-hidden="true"><label>Leave empty<input name="honey" type="text" tabindex="-1" autocomplete="off"></label></div>
+<label class="consent-row"><input type="checkbox" name="publishConsent" required><span>I permit AI Admin Accelerator to publish my display name, rating and comment after moderation. My email and order reference must remain private.</span></label>
+<label class="consent-row"><input type="checkbox" name="privacyAcknowledged" required><span>I've read the <a href="/privacy.html">Privacy Policy</a> and understand that my feedback is emailed to the business for review.</span></label>
+<button class="btn btn-dark feedback-submit" id="feedback-submit" type="submit">Submit your comment →</button>
+<p id="feedback-status" role="status" aria-live="polite" class="feedback-status"></p>
+<p class="feedback-footnote">Submission does not automatically publish your comment. Reviews may be checked for authenticity, spam and personal information; we do not promise to publish every submission. You can also contact <a href="mailto:aiadminaccelerator@agentmail.to">customer support</a> privately.</p>
+</form><noscript><p>To submit feedback, please email <a href="mailto:aiadminaccelerator@agentmail.to">our support team</a>.</p></noscript></div>
+</div></div></section>
 <section id="faq" class="content-section pale"><div class="wrap"><div class="section-header"><span class="eyebrow">Frequently asked questions</span><h2>Everything clear, from the start.</h2></div><div class="faq">
 <details><summary>What can I buy immediately?</summary><p>The £29 Toolkit, £149 Workflow Review, £299 Growth Bundle, £599 Team Productivity Sprint and £999 Operations Transformation Planning are available for one-time card payments. Unpriced digital-product concepts are still in development and cannot be purchased.</p></details>
 <details><summary>How is my purchase delivered?</summary><p>After verified payment, the toolkit is emailed as a ZIP. All personalised services receive an email requesting your brief. For the £149 written review, delivery is normally within five UK working days after complete intake. Higher-tier consultation or training dates are agreed after your brief is received.</p></details>
@@ -155,5 +221,5 @@ footer{background:#0f1c33}footer .brand{color:#fff}footer p{color:#abbdd2}footer
 </div></div></section>
 <section id="contact" class="wrap"><div class="contact-section"><div><span class="eyebrow">Let's build something useful</span><h2>Ready to make everyday work simpler?</h2><p>Tell us what takes too much time in your business, or ask about the toolkit and workflow review. We respond through our business email.</p><p style="margin-bottom:0;color:#d3e5e3;font-weight:680">aiadminaccelerator@agentmail.to</p></div><a class="btn btn-lime" href="mailto:aiadminaccelerator@agentmail.to?subject=AI%20Admin%20Accelerator%20Business%20Enquiry">Start a conversation ↗</a></div></section>
 </main>
-<footer><div class="wrap"><div class="foot-grid"><div><a href="/" class="brand"><img class="brand-symbol" src="/brand-mark.svg" width="43" height="43" alt=""><span>AI Admin <i>Accelerator</i></span></a><p>Practical AI tools, digital resources and human-led workflow support for better business administration.</p><p>Remote-first services • London, United Kingdom</p></div><div><h3>Explore</h3><a href="#solutions">Business services</a><a href="#products">Buy now</a><a href="#new-products">Upcoming products</a><a href="#location">London service area</a></div><div><h3>Support & legal</h3><a href="mailto:aiadminaccelerator@agentmail.to">Customer support</a><a href="/terms.html">Terms of Service</a><a href="/privacy.html">Privacy Policy</a><a href="/cancellation.html">Cancellations & refunds</a></div></div><div class="foot-bottom"><span>© 2026 AI Admin Accelerator · All rights reserved.</span><span>Secure Stripe card checkout available.</span></div><p class="disclaimer">London area map is illustrative and does not identify any legal trading address. AI outputs require human review. New service proposals are subject to availability, scope and agreed pricing.</p></div></footer>
-</body></html>
+<footer><div class="wrap"><div class="foot-grid"><div><a href="/" class="brand"><img class="brand-symbol" src="/brand-mark.svg" width="43" height="43" alt=""><span>AI Admin <i>Accelerator</i></span></a><p>Practical AI tools, digital resources and human-led workflow support for better business administration.</p><p>Remote-first services • London, United Kingdom</p></div><div><h3>Explore</h3><a href="#solutions">Business services</a><a href="#products">Buy now</a><a href="#new-products">Upcoming products</a><a href="#location">London service area</a><a href="#reviews">Customer reviews</a></div><div><h3>Support & legal</h3><a href="mailto:aiadminaccelerator@agentmail.to">Customer support</a><a href="/terms.html">Terms of Service</a><a href="/privacy.html">Privacy Policy</a><a href="/cancellation.html">Cancellations & refunds</a></div></div><div class="foot-bottom"><span>© 2026 AI Admin Accelerator · All rights reserved.</span><span>Secure Stripe card checkout available.</span></div><p class="disclaimer">London area map is illustrative and does not identify any legal trading address. AI outputs require human review. New service proposals are subject to availability, scope and agreed pricing.</p></div></footer>
+<script defer src="/feedback.js"></script></body></html>
