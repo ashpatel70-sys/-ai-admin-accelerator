@@ -118,3 +118,37 @@ test('new storefront shows London service map without a pin, expanded services a
  assert.match(code,/api\/checkout/);
  assert.doesNotMatch(code,/PAYPAL_CLIENT_SECRET|PAYPAL_CLIENT_ID/);
 });
+
+
+test('production homepage exposes accurate Google Search metadata and five transparent price tiers',async()=>{
+ const r=await req('/');assert.equal(r.status,200);
+ const html=await r.text();
+ assert.match(html,/<link rel="canonical" href="https:\/\/ai-admin-accelerator-shop\.onrender\.com\/">/);
+ assert.match(html,/<meta name="robots" content="index,follow">/);
+ assert.match(html,/property="og:title"/);
+ assert.match(html,/name="twitter:card"/);
+ assert.equal((html.match(/<h1\b/g)||[]).length,1);
+ const markup=html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+ assert.ok(markup,'Structured data must be rendered server-side');
+ const info=JSON.parse(markup[1]);
+ assert.ok(info['@graph'].some(x=>x['@type']==='OnlineStore'&&x.name==='AI Admin Accelerator'));
+ assert.ok(info['@graph'].some(x=>x['@type']==='Product'&&x.offers?.price==='29.00'));
+ assert.match(html,/£29/);assert.match(html,/£149/);
+ assert.match(html,/£299/);assert.match(html,/£599/);assert.match(html,/£999/);
+ assert.match(html,/guide price/);
+ assert.equal((html.match(/data-checkout-offer="/g)||[]).length,2);
+ assert.doesNotMatch(html,/Example Test Trader|10 Example Street London/);
+ const logo=await req('/brand-mark.svg');assert.equal(logo.status,200);
+ assert.match(await logo.text(),/<svg/);
+});
+test('live crawl configuration advertises an XML sitemap with canonical production URL',async()=>{
+ const a=await req('/robots.txt');assert.equal(a.status,200);
+ const rules=await a.text();assert.match(rules,/User-agent: \*/);
+ assert.match(rules,/Allow: \//);
+ assert.match(rules,/Sitemap: https:\/\/ai-admin-accelerator-shop\.onrender\.com\/sitemap\.xml/);
+ const b=await req('/sitemap.xml');assert.equal(b.status,200);
+ assert.match(b.headers.get('content-type'),/application\/xml/);
+ const xml=await b.text();assert.match(xml,/<urlset/);
+ assert.match(xml,/<loc>https:\/\/ai-admin-accelerator-shop\.onrender\.com\/</loc>/);
+ assert.doesNotMatch(xml,/terms\.html|privacy\.html|order-received/);
+});
